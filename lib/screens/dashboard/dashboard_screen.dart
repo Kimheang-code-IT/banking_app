@@ -7,12 +7,13 @@ import '../../services/currency_service.dart';
 import '../../theme/app_theme.dart';
 import '../transfer/transfer_screen.dart';
 import '../cards/cards_screen.dart';
+import '../qr_scanner/qr_display_screen.dart';
 import '../qr_scanner/qr_scanner_screen.dart';
 import '../notification/notification_screen.dart';
 import '../profile/profile_screen.dart';
 import '../deposit/deposit_screen.dart';
 import '../withdraw/withdraw_screen.dart';
-import '../ecard/ecard_screen.dart';
+import '../payment/payment_card_mobile_screen.dart';
 import '../report/report_screen.dart';
 import '../exchange_rate/exchange_rate_screen.dart';
 
@@ -34,7 +35,7 @@ class _DashboardScreenState extends State<DashboardScreen>
   @override
   void initState() {
     super.initState();
-    
+
     // Initialize animation controller first
     _animationController = AnimationController(
       vsync: this,
@@ -69,7 +70,7 @@ class _DashboardScreenState extends State<DashboardScreen>
     // Load accounts and start animation after first frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-      Provider.of<AccountProvider>(context, listen: false).loadAccounts();
+        Provider.of<AccountProvider>(context, listen: false).loadAccounts();
         // Start entrance animation
         _animationController.forward();
       }
@@ -101,15 +102,16 @@ class _DashboardScreenState extends State<DashboardScreen>
       appBar: AppBar(
         backgroundColor: AppTheme.accentOrange,
         elevation: 0,
-        toolbarHeight: 100,
+        toolbarHeight: 60,
         leadingWidth: 70,
+        centerTitle: true,
         titleSpacing: 0,
         leading: Padding(
           padding: const EdgeInsets.only(left: 10),
           child: Icon(
             Icons.account_balance,
             color: AppTheme.surfaceColor,
-            size: 50,
+            size: 28,
           ),
         ),
         title: const Text(
@@ -137,13 +139,13 @@ class _DashboardScreenState extends State<DashboardScreen>
             },
           ),
           IconButton(
-            icon: const Icon(Icons.qr_code_2,
+            icon: const Icon(Icons.qr_code,
                 color: AppTheme.surfaceColor, size: 30),
             onPressed: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const QRScannerScreen(),
+                  builder: (context) => const QRDisplayScreen(),
                 ),
               );
             },
@@ -166,33 +168,33 @@ class _DashboardScreenState extends State<DashboardScreen>
             );
           },
           child: RefreshIndicator(
-        onRefresh: () async {
-          if (!context.mounted) return;
-          await Provider.of<AccountProvider>(context, listen: false)
-              .loadAccounts();
-        },
-        child: SingleChildScrollView(
-          controller: _scrollController,
-          physics: const AlwaysScrollableScrollPhysics(),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header Section (Dark Blue)
-              _buildHeader(context),
+            onRefresh: () async {
+              if (!context.mounted) return;
+              await Provider.of<AccountProvider>(context, listen: false)
+                  .loadAccounts();
+            },
+            child: SingleChildScrollView(
+              controller: _scrollController,
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header Section (Dark Blue)
+                  _buildHeader(context),
 
-              // Account Summary Card (White)
-              _buildAccountSummaryCard(context),
+                  // Account Summary Card (White)
+                  _buildAccountSummaryCard(context),
 
-              _buildServicesGrid(context),
+                  _buildServicesGrid(context),
 
-              SizedBox(height: AppTheme.spacingM),
+                  SizedBox(height: AppTheme.spacingM),
 
-              // Explore Services Section
+                  // Explore Services Section
 
-              _buildExploreServices(context),
+                  _buildExploreServices(context),
 
-              SizedBox(height: AppTheme.spacingM),
-            ],
+                  SizedBox(height: AppTheme.spacingM),
+                ],
               ),
             ),
           ),
@@ -208,7 +210,7 @@ class _DashboardScreenState extends State<DashboardScreen>
         final initials = userName.length >= 2
             ? userName.substring(0, 2).toUpperCase()
             : userName.toUpperCase();
-        
+
         return Container(
           padding: EdgeInsets.symmetric(
             horizontal: AppTheme.spacingM,
@@ -481,9 +483,9 @@ class _DashboardScreenState extends State<DashboardScreen>
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                Icons.account_balance_wallet,
+                  Icons.account_balance_wallet,
                   color: AppTheme.surfaceColor,
-                size: 32,
+                  size: 32,
                 ),
               ),
               SizedBox(height: AppTheme.spacingXS),
@@ -560,14 +562,14 @@ class _DashboardScreenState extends State<DashboardScreen>
             ],
           ),
           SizedBox(height: AppTheme.spacingL),
-          // Row 2: ABA Scan, Transfers, E-cash
+          // Row 2: ABA Scan, Transfers, Payment
           Row(
             children: [
               Expanded(
                 child: _buildServiceButton(
                   context,
                   icon: Icons.qr_code_scanner,
-                  label: 'ABA Scan',
+                  label: 'Scan QR',
                   onTap: () {
                     Navigator.push(
                       context,
@@ -598,13 +600,13 @@ class _DashboardScreenState extends State<DashboardScreen>
               Expanded(
                 child: _buildServiceButton(
                   context,
-                  icon: Icons.account_balance_wallet,
-                  label: 'E-cash',
+                  icon: Icons.phone_android,
+                  label: 'Payment',
                   onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const ECardScreen(),
+                        builder: (context) => const PaymentCardMobileScreen(),
                       ),
                     );
                   },

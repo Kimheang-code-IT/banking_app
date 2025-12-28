@@ -1,11 +1,66 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import '../../theme/app_theme.dart';
+import '../../providers/account_provider.dart';
+import '../../providers/transaction_provider.dart';
+import '../../models/transaction.dart';
 
-class DepositScreen extends StatelessWidget {
+class DepositScreen extends StatefulWidget {
   const DepositScreen({super.key});
 
   @override
+  State<DepositScreen> createState() => _DepositScreenState();
+}
+
+class _DepositScreenState extends State<DepositScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<AccountProvider>(context, listen: false).loadAccounts();
+      Provider.of<TransactionProvider>(context, listen: false)
+          .loadTransactions();
+    });
+  }
+
+  List<Transaction> get _depositHistory {
+    final transactionProvider =
+        Provider.of<TransactionProvider>(context, listen: false);
+    return transactionProvider.transactions
+        .where((t) => t.type == TransactionType.income)
+        .toList()
+      ..sort((a, b) => b.date.compareTo(a.date));
+  }
+
+  double get _totalDeposits {
+    return _depositHistory.fold(0.0, (sum, t) => sum + t.amount);
+  }
+
+  String _getRelativeTime(DateTime date) {
+    final now = DateTime.now();
+    final difference = now.difference(date);
+
+    if (difference.inMinutes < 1) {
+      return 'Just now';
+    } else if (difference.inMinutes < 60) {
+      return '${difference.inMinutes}m ago';
+    } else if (difference.inHours < 24) {
+      return '${difference.inHours}h ago';
+    } else if (difference.inDays == 1) {
+      return 'Yesterday';
+    } else if (difference.inDays < 7) {
+      return '${difference.inDays}d ago';
+    } else {
+      return DateFormat('MMM dd, yyyy').format(date);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final currencyFormat =
+        NumberFormat.currency(symbol: '\$', decimalDigits: 2);
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: AppTheme.accentOrange,
@@ -43,58 +98,311 @@ class DepositScreen extends StatelessWidget {
           ),
         ],
       ),
-      backgroundColor: AppTheme.lightBackground,
-      body: Container(
-        decoration: const BoxDecoration(
-          color: AppTheme.lightBackground,
-        ),
-        child: SingleChildScrollView(
-          padding: EdgeInsets.all(AppTheme.spacingL),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Card(
-                color: AppTheme.cardGray,
-                child: Padding(
-                  padding: EdgeInsets.all(AppTheme.spacingL),
+      backgroundColor: AppTheme.accentOrange,
+      body: Column(
+        children: [
+          // Summary Section (200 height)
+          Container(
+            height: 200,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  AppTheme.accentOrange,
+                  AppTheme.accentOrange.withOpacity(0.8),
+                ],
+              ),
+            ),
+            child: Consumer<AccountProvider>(
+              builder: (context, accountProvider, child) {
+                final primaryAccount = accountProvider.primaryAccount;
+                final balance = primaryAccount?.balance ?? 0.0;
+
+                return Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                   child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.savings, size: 60, color: AppTheme.cardIconColor),
-                      SizedBox(height: AppTheme.spacingM),
-                      Text(
-                        'Deposit Money',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
+                      Flexible(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Flexible(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Text(
+                                    'Current Balance',
+                                    style: TextStyle(
+                                      color: AppTheme.surfaceColor,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Text(
+                                      currencyFormat.format(balance),
+                                      style: const TextStyle(
+                                        color: AppTheme.surfaceColor,
+                                        fontSize: 28,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: AppTheme.surfaceColor.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Icon(
+                                Icons.savings,
+                                color: AppTheme.surfaceColor,
+                                size: 32,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      SizedBox(height: AppTheme.spacingL),
-                      TextField(
-                        decoration: InputDecoration(
-                          labelText: 'Amount',
-                          prefixIcon: Icon(Icons.attach_money),
-                          border: OutlineInputBorder(),
+                      const SizedBox(height: 16),
+                      Flexible(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            Expanded(
+                              child: _buildSummaryItem(
+                                'Total Deposits',
+                                currencyFormat.format(_totalDeposits),
+                                Icons.arrow_downward,
+                              ),
+                            ),
+                            Container(
+                              width: 1,
+                              height: 32,
+                              color: AppTheme.surfaceColor.withOpacity(0.3),
+                            ),
+                            Expanded(
+                              child: _buildSummaryItem(
+                                'Deposit Count',
+                                '${_depositHistory.length}',
+                                Icons.receipt,
+                              ),
+                            ),
+                          ],
                         ),
-                        keyboardType: TextInputType.number,
-                      ),
-                      SizedBox(height: AppTheme.spacingL),
-                      ElevatedButton(
-                        onPressed: () {},
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppTheme.accentOrange,
-                          padding: EdgeInsets.symmetric(vertical: 16),
-                        ),
-                        child: Text('Deposit', style: TextStyle(color: AppTheme.surfaceColor)),
                       ),
                     ],
                   ),
-                ),
-              ),
-            ],
+                );
+              },
+            ),
           ),
+          // History List
+          Expanded(
+            child: Container(
+              decoration: const BoxDecoration(
+                color: AppTheme.lightBackground,
+              ),
+              child: Consumer<TransactionProvider>(
+                builder: (context, transactionProvider, _) {
+                  final history = _depositHistory;
+
+                  return RefreshIndicator(
+                    onRefresh: () async {
+                      await transactionProvider.loadTransactions();
+                    },
+                    child: history.isEmpty
+                        ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.savings_outlined,
+                                  size: 64,
+                                  color: AppTheme.textSecondaryOnLight
+                                      .withOpacity(0.5),
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'No deposit history',
+                                  style: TextStyle(
+                                    color: AppTheme.textSecondaryOnLight,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        : ListView.separated(
+                            padding: const EdgeInsets.only(top: 8),
+                            itemCount: history.length,
+                            separatorBuilder: (context, index) => Divider(
+                              height: 1,
+                              thickness: 1,
+                              indent: 80,
+                              color: AppTheme.textSecondaryOnLight
+                                  .withOpacity(0.1),
+                            ),
+                            itemBuilder: (context, index) {
+                              final transaction = history[index];
+                              return _buildDepositItem(
+                                  transaction, currencyFormat);
+                            },
+                          ),
+                  );
+                },
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDepositItem(
+      Transaction transaction, NumberFormat currencyFormat) {
+    return InkWell(
+      onTap: () {
+        // Could navigate to transaction detail if needed
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 12,
+        ),
+        child: Row(
+          children: [
+            // Icon
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: AppTheme.successGreen.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.arrow_downward,
+                color: AppTheme.successGreen,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 16),
+            // Description, Amount, and Time
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    transaction.description,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.textOnLight,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    currencyFormat.format(transaction.amount),
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: AppTheme.successGreen,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            // Time
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  _getRelativeTime(transaction.date),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: AppTheme.textSecondaryOnLight,
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppTheme.accentOrange.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    transaction.status.name.toUpperCase(),
+                    style: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.accentOrange,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
   }
-}
 
+  Widget _buildSummaryItem(String label, String value, IconData icon) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          icon,
+          color: AppTheme.surfaceColor,
+          size: 20,
+        ),
+        const SizedBox(height: 6),
+        Text(
+          label,
+          style: TextStyle(
+            color: AppTheme.surfaceColor.withOpacity(0.8),
+            fontSize: 11,
+            fontWeight: FontWeight.w500,
+          ),
+          textAlign: TextAlign.center,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        const SizedBox(height: 2),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            value,
+            style: const TextStyle(
+              color: AppTheme.surfaceColor,
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    );
+  }
+}

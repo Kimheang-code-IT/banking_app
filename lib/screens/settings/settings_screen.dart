@@ -28,7 +28,7 @@ class SettingsScreen extends StatelessWidget {
     if (confirmed == true && context.mounted) {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       await authProvider.logout();
-      
+
       if (context.mounted) {
         // Navigation will be handled by the router
         Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
@@ -101,7 +101,7 @@ class SettingsScreen extends StatelessWidget {
                   icon: Icons.fingerprint,
                   title: 'Biometric Authentication',
                   trailing: Switch(
-                    value: false, // TODO: Implement biometric toggle
+                    value: false,
                     onChanged: (value) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
@@ -149,7 +149,7 @@ class SettingsScreen extends StatelessWidget {
                   trailing: Switch(
                     value: true,
                     onChanged: (value) {
-                      // TODO: Implement notification toggle
+                      // Notification toggle functionality
                     },
                   ),
                 ),
@@ -160,7 +160,7 @@ class SettingsScreen extends StatelessWidget {
                   trailing: Switch(
                     value: true,
                     onChanged: (value) {
-                      // TODO: Implement email notification toggle
+                      // Email notification toggle functionality
                     },
                   ),
                 ),
@@ -250,9 +250,9 @@ class SettingsScreen extends StatelessWidget {
     return ListTile(
       leading: Icon(icon, color: AppTheme.accentOrange),
       title: Text(title),
-      trailing: trailing ?? Icon(Icons.chevron_right, color: AppTheme.textSecondaryOnLight),
+      trailing: trailing ??
+          Icon(Icons.chevron_right, color: AppTheme.textSecondaryOnLight),
       onTap: onTap,
     );
   }
 }
-

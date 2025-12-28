@@ -75,9 +75,9 @@ class _MainScreenState extends State<MainScreen> {
               label: 'Messages',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.note_outlined),
-              activeIcon: Icon(Icons.note),
-              label: 'Notes',
+              icon: Icon(Icons.smart_toy_outlined),
+              activeIcon: Icon(Icons.smart_toy),
+              label: 'AI',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.settings_outlined),

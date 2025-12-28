@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
-import '../auth/login_screen.dart';
-import '../auth/signup_screen.dart';
+import '../language/language_picker_screen.dart';
 
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
@@ -11,26 +10,34 @@ class WelcomeScreen extends StatefulWidget {
 }
 
 class _WelcomeScreenState extends State<WelcomeScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late AnimationController _animationController;
+  late AnimationController _pulseController;
   late Animation<double> _scaleAnimation;
   late Animation<double> _opacityAnimation;
+  late Animation<double> _rotationAnimation;
+  late Animation<double> _pulseAnimation;
 
   @override
   void initState() {
     super.initState();
     _animationController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1500),
+      duration: const Duration(milliseconds: 2500),
     );
 
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2000),
+    )..repeat(reverse: true);
+
     _scaleAnimation = Tween<double>(
-      begin: 0.85,
+      begin: 0.5,
       end: 1.0,
     ).animate(
       CurvedAnimation(
         parent: _animationController,
-        curve: Curves.easeOut,
+        curve: const Interval(0.0, 0.6, curve: Curves.easeOut),
       ),
     );
 
@@ -40,19 +47,93 @@ class _WelcomeScreenState extends State<WelcomeScreen>
     ).animate(
       CurvedAnimation(
         parent: _animationController,
-        curve: Curves.easeOut,
+        curve: const Interval(0.0, 0.6, curve: Curves.easeOut),
+      ),
+    );
+
+    _rotationAnimation = Tween<double>(
+      begin: -0.1,
+      end: 0.0,
+    ).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: const Interval(0.0, 0.6, curve: Curves.easeOut),
+      ),
+    );
+
+    _pulseAnimation = Tween<double>(
+      begin: 1.0,
+      end: 1.1,
+    ).animate(
+      CurvedAnimation(
+        parent: _pulseController,
+        curve: Curves.easeInOut,
       ),
     );
 
     // Start animation when screen appears
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _animationController.forward();
+      _animationController.forward().then((_) {
+        // Auto-advance after animation completes
+        Future.delayed(const Duration(milliseconds: 500), () {
+          _navigateToNextScreen();
+        });
+      });
     });
+  }
+
+  Future<void> _navigateToNextScreen() async {
+    if (!mounted) return;
+
+    // Don't mark welcome as shown - we want it to show every time
+    // Navigate to language picker with fade and scale transition
+    if (mounted) {
+      Navigator.pushReplacement(
+        context,
+        PageRouteBuilder(
+          pageBuilder: (context, animation, secondaryAnimation) =>
+              const LanguagePickerScreen(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            // Fade transition
+            final fadeAnimation = Tween<double>(
+              begin: 0.0,
+              end: 1.0,
+            ).animate(
+              CurvedAnimation(
+                parent: animation,
+                curve: Curves.easeInOut,
+              ),
+            );
+
+            // Scale transition
+            final scaleAnimation = Tween<double>(
+              begin: 0.9,
+              end: 1.0,
+            ).animate(
+              CurvedAnimation(
+                parent: animation,
+                curve: Curves.easeOut,
+              ),
+            );
+
+            return FadeTransition(
+              opacity: fadeAnimation,
+              child: ScaleTransition(
+                scale: scaleAnimation,
+                child: child,
+              ),
+            );
+          },
+          transitionDuration: const Duration(milliseconds: 400),
+        ),
+      );
+    }
   }
 
   @override
   void dispose() {
     _animationController.dispose();
+    _pulseController.dispose();
     super.dispose();
   }
 
@@ -83,24 +164,66 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Spacer(),
-                  // Animated Logo
+                  // Animated Logo with splash effect
+                  AnimatedBuilder(
+                    animation: Listenable.merge(
+                        [_animationController, _pulseController]),
+                    builder: (context, child) {
+                      return Transform.scale(
+                        scale: _scaleAnimation.value * _pulseAnimation.value,
+                        child: Transform.rotate(
+                          angle: _rotationAnimation.value,
+                          child: Opacity(
+                            opacity: _opacityAnimation.value,
+                            child: Container(
+                              width: 200,
+                              height: 200,
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [
+                                    AppTheme.surfaceColor,
+                                    AppTheme.surfaceColor.withOpacity(0.9),
+                                  ],
+                                ),
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppTheme.surfaceColor.withOpacity(
+                                        0.3 * _opacityAnimation.value),
+                                    blurRadius: 40 * _pulseAnimation.value,
+                                    spreadRadius: 15 * _pulseAnimation.value,
+                                  ),
+                                ],
+                              ),
+                              child: Icon(
+                                Icons.account_balance,
+                                size: 110,
+                                color: AppTheme.accentOrange,
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  SizedBox(height: AppTheme.spacingXL),
+                  // App Name
                   AnimatedBuilder(
                     animation: _animationController,
                     builder: (context, child) {
-                      return Transform.scale(
-                        scale: _scaleAnimation.value,
-                        child: Opacity(
-                          opacity: _opacityAnimation.value,
-                          child: Text(
-                            'KH SmartBank',
-                            style: TextStyle(
-                              fontSize: 42,
-                              fontWeight: FontWeight.bold,
-                              color: AppTheme.surfaceColor,
-                              letterSpacing: 1.2,
-                            ),
-                            textAlign: TextAlign.center,
+                      return Opacity(
+                        opacity: _opacityAnimation.value,
+                        child: Text(
+                          'GEN-Z BANK',
+                          style: TextStyle(
+                            fontSize: 36,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.surfaceColor,
+                            letterSpacing: 2.0,
                           ),
+                          textAlign: TextAlign.center,
                         ),
                       );
                     },
@@ -121,87 +244,37 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                     ),
                   ),
                   const Spacer(),
-                  // Buttons
-                  Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: AppTheme.spacingL,
-                      vertical: AppTheme.spacingXL,
-                    ),
-                    child: Column(
-                      children: [
-                        // Primary Button: Log In
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const LoginScreen(),
-                                ),
-                              );
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppTheme.surfaceColor,
-                              foregroundColor: AppTheme.accentOrange,
-                              padding: EdgeInsets.symmetric(
-                                vertical: AppTheme.spacingM,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(
-                                  AppTheme.radiusM,
-                                ),
-                              ),
-                              elevation: 4,
-                            ),
-                            child: const Text(
-                              'Log In',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
+                  // Loading indicator during navigation
+                  AnimatedBuilder(
+                    animation: _animationController,
+                    builder: (context, child) {
+                      if (_animationController.value < 0.9) {
+                        return const SizedBox.shrink();
+                      }
+                      return Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: AppTheme.spacingL,
+                          vertical: AppTheme.spacingXL,
                         ),
-                        SizedBox(height: AppTheme.spacingM),
-                        // Outlined Button: Open an Account
-                        SizedBox(
-                          width: double.infinity,
-                          child: OutlinedButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const SignupScreen(),
-                                ),
-                              );
-                            },
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: AppTheme.surfaceColor,
-                              side: BorderSide(
-                                color: AppTheme.surfaceColor,
-                                width: 2,
-                              ),
-                              padding: EdgeInsets.symmetric(
-                                vertical: AppTheme.spacingM,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(
-                                  AppTheme.radiusM,
-                                ),
+                        child: Column(
+                          children: [
+                            const CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                AppTheme.surfaceColor,
                               ),
                             ),
-                            child: const Text(
-                              'Open an Account',
+                            SizedBox(height: AppTheme.spacingM),
+                            Text(
+                              'Loading...',
                               style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
+                                color: AppTheme.surfaceColor.withOpacity(0.9),
+                                fontSize: 16,
                               ),
                             ),
-                          ),
+                          ],
                         ),
-                      ],
-                    ),
+                      );
+                    },
                   ),
                 ],
               ),

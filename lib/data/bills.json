@@ -1,0 +1,38 @@
+[
+  {
+    "id": "1",
+    "provider": "Electric Company",
+    "amount": 125.50,
+    "dueDate": "2024-01-20T00:00:00Z",
+    "status": "pending",
+    "category": "utilities",
+    "description": "Monthly electricity bill"
+  },
+  {
+    "id": "2",
+    "provider": "Water Department",
+    "amount": 45.00,
+    "dueDate": "2024-01-25T00:00:00Z",
+    "status": "pending",
+    "category": "utilities",
+    "description": "Water bill"
+  },
+  {
+    "id": "3",
+    "provider": "Netflix",
+    "amount": 15.99,
+    "dueDate": "2024-01-30T00:00:00Z",
+    "status": "pending",
+    "category": "subscription",
+    "description": "Monthly subscription"
+  },
+  {
+    "id": "4",
+    "provider": "Car Insurance",
+    "amount": 250.00,
+    "dueDate": "2024-01-13T00:00:00Z",
+    "status": "overdue",
+    "category": "insurance",
+    "description": "Monthly car insurance premium"
+  }
+]

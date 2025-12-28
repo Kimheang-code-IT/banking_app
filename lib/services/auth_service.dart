@@ -16,22 +16,26 @@ class AuthService {
       final user = _mockDataService.getDefaultUser();
       await _storageService.saveUser(user.toJson());
       await _storageService.setLoggedIn(true);
-      
+
       // Initialize mock data if not already initialized
       final accounts = await _storageService.getAccounts();
       if (accounts.isEmpty) {
         await _mockDataService.initializeMockData();
       }
-      
+
       return true;
     }
     return false;
   }
 
-  Future<bool> signup(String name, String email, String phone, String password) async {
+  Future<bool> signup(
+      String name, String email, String phone, String password) async {
     await Future.delayed(const Duration(seconds: 1));
 
-    if (name.isNotEmpty && email.isNotEmpty && phone.isNotEmpty && password.isNotEmpty) {
+    if (name.isNotEmpty &&
+        email.isNotEmpty &&
+        phone.isNotEmpty &&
+        password.isNotEmpty) {
       final user = User(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         name: name,
@@ -39,13 +43,15 @@ class AuthService {
         phone: phone,
         createdAt: DateTime.now(),
       );
-      
+
+      // Save user but DON'T auto-login
+      // User must login manually after signup
       await _storageService.saveUser(user.toJson());
-      await _storageService.setLoggedIn(true);
-      
+      // Don't set isLoggedIn to true - user needs to verify login
+
       // Initialize mock data for new user
       await _mockDataService.initializeMockData();
-      
+
       return true;
     }
     return false;
@@ -68,4 +74,3 @@ class AuthService {
     // Optionally clear user data but keep accounts/transactions for demo
   }
 }
-

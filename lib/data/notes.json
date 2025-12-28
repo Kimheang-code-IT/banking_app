@@ -1,0 +1,22 @@
+[
+  {
+    "id": "1",
+    "title": "Banking Meeting Notes",
+    "content": "Discussed new features for mobile banking app. Need to implement QR code scanning and improve transaction history.",
+    "createdAt": "2024-01-16T14:00:00Z",
+    "updatedAt": "2024-01-16T15:30:00Z"
+  },
+  {
+    "id": "2",
+    "title": "Account Transfer Reminder",
+    "content": "Remember to transfer $500 to savings account at the end of the month.",
+    "createdAt": "2024-01-15T10:00:00Z"
+  },
+  {
+    "id": "3",
+    "title": "Budget Planning",
+    "content": "Monthly budget: Rent $800, Food $300, Transport $150, Entertainment $100. Total: $1,350",
+    "createdAt": "2024-01-14T09:00:00Z",
+    "updatedAt": "2024-01-15T08:00:00Z"
+  }
+]

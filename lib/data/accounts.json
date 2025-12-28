@@ -1,0 +1,16 @@
+[
+  {
+    "accountNumber": "1234567890",
+    "balance": 12500.50,
+    "type": "checking",
+    "currency": "USD",
+    "accountName": "Primary Checking"
+  },
+  {
+    "accountNumber": "0987654321",
+    "balance": 50000.00,
+    "type": "savings",
+    "currency": "USD",
+    "accountName": "Savings Account"
+  }
+]

@@ -60,7 +60,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: AppTheme.lightBackground,
+        backgroundColor: AppTheme.accentOrange,
         elevation: 0,
         toolbarHeight: 60,
         leadingWidth: 70,
@@ -85,16 +85,6 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
           ),
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.flash_on, color: AppTheme.surfaceColor),
-            onPressed: () {
-              controller.toggleTorch();
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.cameraswitch, color: AppTheme.surfaceColor),
-            onPressed: () => controller.switchCamera(),
-          ),
           Padding(
             padding: const EdgeInsets.only(right: 12),
             child: Icon(
@@ -122,12 +112,46 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
           Container(
             decoration: ShapeDecoration(
               shape: QrScannerOverlayShape(
-                borderColor: Theme.of(context).colorScheme.primary,
+                borderColor: AppTheme.accentOrange,
                 borderRadius: 16,
                 borderLength: 30,
                 borderWidth: 8,
                 cutOutSize: 250,
               ),
+            ),
+          ),
+          // Control buttons
+          Positioned(
+            top: 16,
+            right: 16,
+            child: Column(
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.5),
+                    shape: BoxShape.circle,
+                  ),
+                  child: IconButton(
+                    icon: const Icon(Icons.flash_on,
+                        color: AppTheme.surfaceColor),
+                    onPressed: () {
+                      controller.toggleTorch();
+                    },
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.5),
+                    shape: BoxShape.circle,
+                  ),
+                  child: IconButton(
+                    icon: const Icon(Icons.cameraswitch,
+                        color: AppTheme.surfaceColor),
+                    onPressed: () => controller.switchCamera(),
+                  ),
+                ),
+              ],
             ),
           ),
           // Instructions

@@ -1,0 +1,52 @@
+[
+  {
+    "id": "1",
+    "amount": 1500.00,
+    "type": "income",
+    "description": "Salary Deposit",
+    "date": "2024-01-15T10:00:00Z",
+    "status": "completed",
+    "category": "Salary",
+    "accountNumber": "1234567890"
+  },
+  {
+    "id": "2",
+    "amount": -250.75,
+    "type": "expense",
+    "description": "Grocery Shopping",
+    "date": "2024-01-16T14:30:00Z",
+    "status": "completed",
+    "category": "Shopping",
+    "accountNumber": "1234567890"
+  },
+  {
+    "id": "3",
+    "amount": -1200.00,
+    "type": "transfer",
+    "description": "Transfer to Savings",
+    "date": "2024-01-14T09:15:00Z",
+    "recipient": "0987654321",
+    "status": "completed",
+    "accountNumber": "1234567890"
+  },
+  {
+    "id": "4",
+    "amount": -89.99,
+    "type": "expense",
+    "description": "Netflix Subscription",
+    "date": "2024-01-12T08:00:00Z",
+    "status": "completed",
+    "category": "Subscription",
+    "accountNumber": "1234567890"
+  },
+  {
+    "id": "5",
+    "amount": 500.00,
+    "type": "income",
+    "description": "Freelance Payment",
+    "date": "2024-01-10T16:45:00Z",
+    "status": "completed",
+    "category": "Income",
+    "accountNumber": "1234567890"
+  }
+]

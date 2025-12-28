@@ -152,7 +152,8 @@ class _MessagesScreenState extends State<MessagesScreen> {
                           Icon(
                             Icons.message_outlined,
                             size: 64,
-                            color: AppTheme.textSecondaryOnLight.withOpacity(0.5),
+                            color:
+                                AppTheme.textSecondaryOnLight.withOpacity(0.5),
                           ),
                           const SizedBox(height: 16),
                           Text(
@@ -193,7 +194,6 @@ class _MessagesScreenState extends State<MessagesScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // TODO: Implement new message functionality
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('New message feature coming soon'),

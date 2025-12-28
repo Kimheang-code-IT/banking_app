@@ -9,6 +9,9 @@ class StorageService {
   static const String _billsKey = 'bills';
   static const String _isLoggedInKey = 'is_logged_in';
   static const String _welcomeScreenShownKey = 'welcome_screen_shown';
+  static const String _onboardingCompletedKey = 'onboarding_completed';
+  static const String _idCardScannedKey = 'id_card_scanned';
+  static const String _scannedIdDataKey = 'scanned_id_data';
 
   Future<void> saveUser(Map<String, dynamic> user) async {
     final prefs = await SharedPreferences.getInstance();
@@ -108,5 +111,47 @@ class StorageService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_welcomeScreenShownKey, shown);
   }
-}
 
+  Future<bool> isOnboardingCompleted() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_onboardingCompletedKey) ?? false;
+  }
+
+  Future<void> setOnboardingCompleted(bool completed) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_onboardingCompletedKey, completed);
+  }
+
+  Future<bool> isIdCardScanned() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_idCardScannedKey) ?? false;
+  }
+
+  Future<void> setIdCardScanned(bool scanned) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_idCardScannedKey, scanned);
+  }
+
+  Future<Map<String, dynamic>?> getScannedIdData() async {
+    final prefs = await SharedPreferences.getInstance();
+    final dataJson = prefs.getString(_scannedIdDataKey);
+    if (dataJson != null) {
+      return jsonDecode(dataJson) as Map<String, dynamic>;
+    }
+    return null;
+  }
+
+  Future<void> saveScannedIdData(Map<String, dynamic> data) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_scannedIdDataKey, jsonEncode(data));
+  }
+
+  // Reset onboarding flags (for testing/debugging)
+  Future<void> resetOnboardingFlags() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_welcomeScreenShownKey);
+    await prefs.remove(_onboardingCompletedKey);
+    await prefs.remove(_idCardScannedKey);
+    await prefs.remove(_scannedIdDataKey);
+  }
+}

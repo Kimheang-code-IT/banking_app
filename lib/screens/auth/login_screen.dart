@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../widgets/custom_button.dart';
 import '../../theme/app_theme.dart';
 import '../../screens/main_screen.dart';
-import 'signup_screen.dart';
+import 'id_card_scanner_screen.dart';
 import 'forgot_password_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -380,7 +380,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const SignupScreen(),
+                              builder: (context) => const IdCardScannerScreen(),
                             ),
                           );
                         },

@@ -1,0 +1,24 @@
+[
+  {
+    "id": "1",
+    "cardNumber": "4532123456789012",
+    "holderName": "JOHN DOE",
+    "expiryDate": "12/25",
+    "cvv": "123",
+    "type": "debit",
+    "balance": 12500.50,
+    "isActive": true,
+    "cardColor": "#1E3A8A"
+  },
+  {
+    "id": "2",
+    "cardNumber": "5555123456789012",
+    "holderName": "JOHN DOE",
+    "expiryDate": "08/26",
+    "cvv": "456",
+    "type": "credit",
+    "balance": 5000.00,
+    "isActive": true,
+    "cardColor": "#059669"
+  }
+]

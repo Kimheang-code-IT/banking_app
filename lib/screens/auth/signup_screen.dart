@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../widgets/custom_button.dart';
+
 import '../../theme/app_theme.dart';
 import 'login_screen.dart';
 import 'terms_screen.dart';
@@ -32,7 +32,7 @@ class _SignupScreenState extends State<SignupScreen> {
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _agreeToTerms = false;
-  bool _isNameFocused = false;
+ 
   bool _isPhoneFocused = false;
   bool _isEmailFocused = false;
   bool _isPasswordFocused = false;
@@ -50,9 +50,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
     // Add focus listeners
     _nameFocusNode.addListener(() {
-      setState(() {
-        _isNameFocused = _nameFocusNode.hasFocus;
-      });
+     
       if (_nameFocusNode.hasFocus) {
         _scrollToField(_nameFieldKey);
       }

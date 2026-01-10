@@ -68,6 +68,7 @@ class AppTheme {
   static const double elevationXHigh = 12.0;
 
   // Border Radius Constants
+  static const double radiusXS = 6.0;
   static const double radiusS = 8.0;
   static const double radiusM = 12.0;
   static const double radiusL = 16.0;

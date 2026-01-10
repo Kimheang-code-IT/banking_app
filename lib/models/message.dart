@@ -5,6 +5,10 @@ class Message {
   final String content;
   final DateTime timestamp;
   final bool isRead;
+  final String? imageUrl;
+  final Map<String, int> reactions; // emoji -> count
+  final bool isEdited;
+  final DateTime? editedAt;
 
   Message({
     required this.id,
@@ -13,7 +17,11 @@ class Message {
     required this.content,
     required this.timestamp,
     this.isRead = false,
-  });
+    this.imageUrl,
+    Map<String, int>? reactions,
+    this.isEdited = false,
+    this.editedAt,
+  }) : reactions = reactions ?? {};
 
   Map<String, dynamic> toJson() {
     return {
@@ -23,6 +31,10 @@ class Message {
       'content': content,
       'timestamp': timestamp.toIso8601String(),
       'isRead': isRead,
+      'imageUrl': imageUrl,
+      'reactions': reactions,
+      'isEdited': isEdited,
+      'editedAt': editedAt?.toIso8601String(),
     };
   }
 
@@ -33,7 +45,45 @@ class Message {
       receiverId: json['receiverId'] as String,
       content: json['content'] as String,
       timestamp: DateTime.parse(json['timestamp'] as String),
-      isRead: json['isRead'] as bool? ?? false,
+      isRead: (json['isRead'] as bool?) ?? false,
+      imageUrl: json['imageUrl'] as String?,
+      reactions: json['reactions'] != null
+          ? Map<String, int>.from(
+              (json['reactions'] as Map).map(
+                (key, value) => MapEntry(key.toString(), value as int),
+              ),
+            )
+          : null,
+      isEdited: (json['isEdited'] as bool?) ?? false,
+      editedAt: json['editedAt'] != null
+          ? DateTime.parse(json['editedAt'] as String)
+          : null,
+    );
+  }
+
+  Message copyWith({
+    String? id,
+    String? senderId,
+    String? receiverId,
+    String? content,
+    DateTime? timestamp,
+    bool? isRead,
+    String? imageUrl,
+    Map<String, int>? reactions,
+    bool? isEdited,
+    DateTime? editedAt,
+  }) {
+    return Message(
+      id: id ?? this.id,
+      senderId: senderId ?? this.senderId,
+      receiverId: receiverId ?? this.receiverId,
+      content: content ?? this.content,
+      timestamp: timestamp ?? this.timestamp,
+      isRead: isRead ?? this.isRead,
+      imageUrl: imageUrl ?? this.imageUrl,
+      reactions: reactions != null ? Map<String, int>.from(reactions) : Map<String, int>.from(this.reactions),
+      isEdited: isEdited ?? this.isEdited,
+      editedAt: editedAt ?? this.editedAt,
     );
   }
 }

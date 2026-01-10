@@ -1,68 +1,86 @@
 import '../models/user.dart';
 import 'storage_service.dart';
-import 'mock_data_service.dart';
+import '../api/api_service_factory.dart';
+import '../api/services/api_service.dart';
 
+/// Auth Service
+/// 
+/// Handles authentication using the API service abstraction.
+/// Works with both mock and real API implementations.
 class AuthService {
   final StorageService _storageService = StorageService();
-  final MockDataService _mockDataService = MockDataService();
+  final ApiService _apiService = ApiServiceFactory.getService();
 
   Future<bool> login(String email, String password) async {
-    // In a real app, this would make an API call
-    // For now, we'll use mock data
-    await Future.delayed(const Duration(seconds: 1));
+    try {
+      final response = await _apiService.login(email, password);
 
-    // Simple validation - in real app, check against backend
-    if (email.isNotEmpty && password.isNotEmpty) {
-      final user = _mockDataService.getDefaultUser();
-      await _storageService.saveUser(user.toJson());
-      await _storageService.setLoggedIn(true);
+      if (response.success && response.data != null) {
+        // Save user and token
+        final userData = response.data!['user'] as Map<String, dynamic>;
+        await _storageService.saveUser(userData);
+        await _storageService.setLoggedIn(true);
 
-      // Initialize mock data if not already initialized
-      final accounts = await _storageService.getAccounts();
-      if (accounts.isEmpty) {
-        await _mockDataService.initializeMockData();
+        // Save token if provided
+        if (response.data!.containsKey('token')) {
+          // In a real app, save token to secure storage
+          // await _secureStorage.saveToken(response.data!['token']);
+        }
+
+        return true;
       }
 
-      return true;
+      return false;
+    } catch (e) {
+      // Handle error
+      return false;
     }
-    return false;
   }
 
   Future<bool> signup(
       String name, String email, String phone, String password) async {
-    await Future.delayed(const Duration(seconds: 1));
+    try {
+      final response = await _apiService.signup(name, email, phone, password);
 
-    if (name.isNotEmpty &&
-        email.isNotEmpty &&
-        phone.isNotEmpty &&
-        password.isNotEmpty) {
-      final user = User(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        name: name,
-        email: email,
-        phone: phone,
-        createdAt: DateTime.now(),
-      );
+      if (response.success && response.data != null) {
+        // Save user but DON'T auto-login
+        // User must login manually after signup
+        final userData = response.data!['user'] as Map<String, dynamic>;
+        await _storageService.saveUser(userData);
+        // Don't set isLoggedIn to true - user needs to verify login
 
-      // Save user but DON'T auto-login
-      // User must login manually after signup
-      await _storageService.saveUser(user.toJson());
-      // Don't set isLoggedIn to true - user needs to verify login
+        return true;
+      }
 
-      // Initialize mock data for new user
-      await _mockDataService.initializeMockData();
-
-      return true;
+      return false;
+    } catch (e) {
+      // Handle error
+      return false;
     }
-    return false;
   }
 
   Future<User?> getCurrentUser() async {
-    final userJson = await _storageService.getUser();
-    if (userJson != null) {
-      return User.fromJson(userJson);
+    try {
+      // First try to get from API
+      final response = await _apiService.getCurrentUser();
+      if (response.success && response.data != null) {
+        return response.data;
+      }
+
+      // Fallback to local storage
+      final userJson = await _storageService.getUser();
+      if (userJson != null) {
+        return User.fromJson(userJson);
+      }
+      return null;
+    } catch (e) {
+      // Fallback to local storage on error
+      final userJson = await _storageService.getUser();
+      if (userJson != null) {
+        return User.fromJson(userJson);
+      }
+      return null;
     }
-    return null;
   }
 
   Future<bool> isLoggedIn() async {
@@ -70,7 +88,13 @@ class AuthService {
   }
 
   Future<void> logout() async {
-    await _storageService.setLoggedIn(false);
-    // Optionally clear user data but keep accounts/transactions for demo
+    try {
+      await _apiService.logout();
+    } catch (e) {
+      // Continue with local logout even if API call fails
+    } finally {
+      await _storageService.setLoggedIn(false);
+      // Optionally clear user data but keep accounts/transactions for demo
+    }
   }
 }

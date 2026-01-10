@@ -16,20 +16,50 @@ class AppLocalizations {
     'en': {
       // App
       'app_name': 'GEN-Z BANK',
+      'appName': 'Banking App', // New camelCase key
       'welcome': 'Welcome',
       'welcome_back': 'Welcome back',
+      'getStarted': 'Get Started', // New key
       'select_language': 'Select Language',
+      'selectLanguage': 'Select Language', // New camelCase key
       'continue': 'Continue',
+      'continueText': 'Continue', // Alias
 
       // Auth
       'login': 'Log In',
       'signup': 'Sign Up',
+      'signUp': 'Create Account', // New camelCase key
       'email': 'Email',
       'password': 'Password',
       'forgot_password': 'Forgot password?',
       'name': 'Full Name',
+      'fullName': 'Full Name', // New camelCase key
       'phone': 'Phone Number',
       'confirm_password': 'Confirm Password',
+      'confirmPassword': 'Confirm Password', // New camelCase key
+      'gender': 'Gender', // New key
+      'idNumber': 'ID Number', // New key
+      'dateOfBirth': 'Date of Birth', // New key
+      'male': 'Male', // New key
+      'female': 'Female', // New key
+      'other': 'Other', // New key
+      'scanIdCard': 'Scan ID Card', // New key
+      'capture': 'Capture', // New key
+      'useSampleData': 'Use Sample Data', // New key
+      'verifyYourInformation': 'Verify Your Information', // New key
+      'setPassword': 'Set Password', // New key
+      'finishRegistration': 'Finish Registration', // New key
+      'registrationSuccess': 'Registration successful! Please sign in.', // New key
+      'invalidEmail': 'Please enter a valid email address', // New key
+      'passwordTooShort': 'Password must be at least 8 characters', // New key
+      'passwordsDoNotMatch': 'Passwords do not match', // New key
+      'fieldRequired': 'This field is required', // New key
+      'loginFailed': 'Invalid email or password', // New key
+      'demoEmail': 'demo@bank.com', // New key
+      'demoPassword': 'Password123', // New key
+      'loading': 'Loading...', // New key
+      'error': 'Error', // New key
+      'success': 'Success', // New key
       'agree_terms': 'I agree to the Terms & Conditions',
       'open_account': 'Open an Account',
       'reset_password': 'Reset Password',
@@ -43,11 +73,16 @@ class AppLocalizations {
       'deposit': 'Deposit',
       'withdraw': 'Withdraw',
       'transfer': 'Transfer',
+      'pay': 'Pay', // New key
+      'topUp': 'Top Up', // New key
+      'recentTransactions': 'Recent Transactions', // New key
+      'logoutConfirm': 'Are you sure you want to logout?', // New key
       'payment': 'Payment',
       'cards': 'Cards',
       'scan_qr': 'Scan QR',
       'transfers': 'Transfers',
       'exchange_rate': 'Exchange Rate',
+      'exchangeRate': 'Exchange Rate', // New camelCase key
       'report': 'Report',
 
       // Transactions
@@ -83,20 +118,50 @@ class AppLocalizations {
     'km': {
       // App
       'app_name': 'ធនាគារ GEN-Z',
+      'appName': 'កម្មវិធីធនាគារ', // New camelCase key
       'welcome': 'សូមស្វាគមន៍',
       'welcome_back': 'សូមស្វាគមន៍មកវិញ',
+      'getStarted': 'ចាប់ផ្តើម', // New key
       'select_language': 'ជ្រើសរើសភាសា',
+      'selectLanguage': 'ជ្រើសរើសភាសា', // New camelCase key
       'continue': 'បន្ត',
+      'continueText': 'បន្ត', // Alias
 
       // Auth
       'login': 'ចូល',
       'signup': 'ចុះឈ្មោះ',
+      'signUp': 'បង្កើតគណនី', // New camelCase key
       'email': 'អ៊ីមែល',
       'password': 'ពាក្យសម្ងាត់',
       'forgot_password': 'ភ្លេចពាក្យសម្ងាត់?',
       'name': 'ឈ្មោះពេញ',
+      'fullName': 'ឈ្មោះពេញ', // New camelCase key
       'phone': 'លេខទូរស័ព្ទ',
       'confirm_password': 'បញ្ជាក់ពាក្យសម្ងាត់',
+      'confirmPassword': 'បញ្ជាក់ពាក្យសម្ងាត់', // New camelCase key
+      'gender': 'ភេទ', // New key
+      'idNumber': 'លេខអត្តសញ្ញាណ', // New key
+      'dateOfBirth': 'ថ្ងៃខែឆ្នាំកំណើត', // New key
+      'male': 'ប្រុស', // New key
+      'female': 'ស្រី', // New key
+      'other': 'ផ្សេងៗ', // New key
+      'scanIdCard': 'ស្កេនអត្តសញ្ញាណប័ណ្ណ', // New key
+      'capture': 'ថត', // New key
+      'useSampleData': 'ប្រើទិន្នន័យគំរូ', // New key
+      'verifyYourInformation': 'ផ្ទៀងផ្ទាត់ព័ត៌មានរបស់អ្នក', // New key
+      'setPassword': 'កំណត់ពាក្យសម្ងាត់', // New key
+      'finishRegistration': 'បញ្ចប់ការចុះឈ្មោះ', // New key
+      'registrationSuccess': 'ការចុះឈ្មោះជោគជ័យ! សូមចូល។', // New key
+      'invalidEmail': 'សូមបញ្ចូលអាសយដ្ឋានអ៊ីមែលត្រឹមត្រូវ', // New key
+      'passwordTooShort': 'ពាក្យសម្ងាត់ត្រូវតែមានយ៉ាងហោចណាស់ ៨ តួអក្សរ', // New key
+      'passwordsDoNotMatch': 'ពាក្យសម្ងាត់មិនផ្គូផ្គងគ្នា', // New key
+      'fieldRequired': 'វាលនេះត្រូវការ', // New key
+      'loginFailed': 'អ៊ីមែល ឬពាក្យសម្ងាត់មិនត្រឹមត្រូវ', // New key
+      'demoEmail': 'demo@bank.com', // New key
+      'demoPassword': 'Password123', // New key
+      'loading': 'កំពុងផ្ទុក...', // New key
+      'error': 'កំហុស', // New key
+      'success': 'ជោគជ័យ', // New key
       'agree_terms': 'ខ្ញុំយល់ព្រមនឹងលក្ខខណ្ឌ',
       'open_account': 'បើកគណនី',
       'reset_password': 'កំណត់ពាក្យសម្ងាត់ឡើងវិញ',
@@ -110,11 +175,16 @@ class AppLocalizations {
       'deposit': 'ដាក់ប្រាក់',
       'withdraw': 'ដកប្រាក់',
       'transfer': 'ផ្ទេរ',
+      'pay': 'បង់ប្រាក់', // New key
+      'topUp': 'បន្ថែមប្រាក់', // New key
+      'recentTransactions': 'ប្រតិបត្តិការថ្មីៗ', // New key
+      'logoutConfirm': 'តើអ្នកពិតជាចង់ចេញមែនទេ?', // New key
       'payment': 'បង់ប្រាក់',
       'cards': 'កាត',
       'scan_qr': 'ស្កេន QR',
       'transfers': 'ការផ្ទេរ',
       'exchange_rate': 'អត្រាប្តូរប្រាក់',
+      'exchangeRate': 'អត្រាប្តូរប្រាក់', // New camelCase key
       'report': 'របាយការណ៍',
 
       // Transactions
@@ -154,19 +224,45 @@ class AppLocalizations {
   }
 
   // Getters for common translations
-  String get appName => translate('app_name');
+  String get appName => translate('appName') != 'appName' ? translate('appName') : translate('app_name');
   String get welcome => translate('welcome');
   String get welcomeBack => translate('welcome_back');
-  String get selectLanguage => translate('select_language');
+  String get getStarted => translate('getStarted');
+  String get selectLanguage => translate('selectLanguage') != 'selectLanguage' ? translate('selectLanguage') : translate('select_language');
   String get continueText => translate('continue');
   String get login => translate('login');
   String get signup => translate('signup');
+  String get signUp => translate('signUp');
   String get email => translate('email');
   String get password => translate('password');
   String get forgotPassword => translate('forgot_password');
   String get name => translate('name');
+  String get fullName => translate('fullName') != 'fullName' ? translate('fullName') : translate('name');
   String get phone => translate('phone');
-  String get confirmPassword => translate('confirm_password');
+  String get confirmPassword => translate('confirmPassword') != 'confirmPassword' ? translate('confirmPassword') : translate('confirm_password');
+  String get gender => translate('gender');
+  String get idNumber => translate('idNumber');
+  String get dateOfBirth => translate('dateOfBirth');
+  String get male => translate('male');
+  String get female => translate('female');
+  String get other => translate('other');
+  String get scanIdCard => translate('scanIdCard');
+  String get capture => translate('capture');
+  String get useSampleData => translate('useSampleData');
+  String get verifyYourInformation => translate('verifyYourInformation');
+  String get setPassword => translate('setPassword');
+  String get finishRegistration => translate('finishRegistration');
+  String get registrationSuccess => translate('registrationSuccess');
+  String get invalidEmail => translate('invalidEmail');
+  String get passwordTooShort => translate('passwordTooShort');
+  String get passwordsDoNotMatch => translate('passwordsDoNotMatch');
+  String get fieldRequired => translate('fieldRequired');
+  String get loginFailed => translate('loginFailed');
+  String get demoEmail => translate('demoEmail');
+  String get demoPassword => translate('demoPassword');
+  String get loading => translate('loading');
+  String get error => translate('error');
+  String get success => translate('success');
   String get agreeTerms => translate('agree_terms');
   String get openAccount => translate('open_account');
   String get resetPassword => translate('reset_password');
@@ -178,11 +274,15 @@ class AppLocalizations {
   String get deposit => translate('deposit');
   String get withdraw => translate('withdraw');
   String get transfer => translate('transfer');
+  String get pay => translate('pay');
+  String get topUp => translate('topUp');
+  String get recentTransactions => translate('recentTransactions');
+  String get logoutConfirm => translate('logoutConfirm');
   String get payment => translate('payment');
   String get cards => translate('cards');
   String get scanQr => translate('scan_qr');
   String get transfers => translate('transfers');
-  String get exchangeRate => translate('exchange_rate');
+  String get exchangeRate => translate('exchangeRate') != 'exchangeRate' ? translate('exchangeRate') : translate('exchange_rate');
   String get report => translate('report');
   String get currentBalance => translate('current_balance');
   String get totalDeposits => translate('total_deposits');

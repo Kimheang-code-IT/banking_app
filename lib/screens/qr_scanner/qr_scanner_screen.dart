@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:image_picker/image_picker.dart';
 import '../transfer/transfer_screen.dart';
 import '../../theme/app_theme.dart';
 
@@ -12,6 +13,7 @@ class QRScannerScreen extends StatefulWidget {
 
 class _QRScannerScreenState extends State<QRScannerScreen> {
   final MobileScannerController controller = MobileScannerController();
+  final ImagePicker _imagePicker = ImagePicker();
 
   @override
   void dispose() {
@@ -54,6 +56,42 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
         ),
       );
     }
+  }
+
+  Future<void> _uploadQRCode() async {
+    try {
+      final XFile? image = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+      );
+
+      if (image == null) return;
+
+      // Use the controller's analyzeImage method
+      // This will process the image and trigger onDetect if a barcode is found
+      await controller.analyzeImage(image.path);
+      
+      // Show loading message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Processing QR code from image...'),
+            backgroundColor: AppTheme.accentOrange,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      _showError('Error reading QR code: ${e.toString()}');
+    }
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: AppTheme.textSecondary,
+      ),
+    );
   }
 
   @override
@@ -108,91 +146,140 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
               }
             },
           ),
-          // Overlay with scanning frame
+          // Blue overlay with scanning frame
           Container(
             decoration: ShapeDecoration(
               shape: QrScannerOverlayShape(
-                borderColor: AppTheme.accentOrange,
-                borderRadius: 16,
-                borderLength: 30,
-                borderWidth: 8,
-                cutOutSize: 250,
+                borderColor: Colors.blue,
+                frameColor: Colors.white,
+                borderRadius: 8,
+                borderLength: 40,
+                borderWidth: 4,
+                cutOutSize: 280,
               ),
             ),
           ),
-          // Control buttons
+          // Instructions at the top
           Positioned(
-            top: 16,
-            right: 16,
+            top: 60,
+            left: 0,
+            right: 0,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Text(
+                'Place an QR at the center of your camera and the QR will be automatically scanned.',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+          // Text in scanning area - Payment Accepted Here
+          Positioned(
+            top: MediaQuery.of(context).size.height * 0.4 - 40,
+            left: 0,
+            right: 0,
             child: Column(
               children: [
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.5),
-                    shape: BoxShape.circle,
+                Text(
+                  'Payment Accepted Here',
+                  style: TextStyle(
+                    color: Colors.black87,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
                   ),
-                  child: IconButton(
-                    icon: const Icon(Icons.flash_on,
-                        color: AppTheme.surfaceColor),
-                    onPressed: () {
-                      controller.toggleTorch();
-                    },
-                  ),
+                  textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 12),
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.5),
-                    shape: BoxShape.circle,
+                const SizedBox(height: 4),
+                Text(
+                  'scan here to pay',
+                  style: TextStyle(
+                    color: Colors.black54,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w400,
                   ),
-                  child: IconButton(
-                    icon: const Icon(Icons.cameraswitch,
-                        color: AppTheme.surfaceColor),
-                    onPressed: () => controller.switchCamera(),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+          // Closer indicator below scanning area
+          Positioned(
+            top: MediaQuery.of(context).size.height * 0.4 + 160,
+            left: 0,
+            right: 0,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.keyboard_arrow_down,
+                  color: Colors.white,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Closer',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ],
             ),
           ),
-          // Instructions
+          // Upload QR Code Button (positioned above flashlight)
           Positioned(
             bottom: 100,
             left: 0,
             right: 0,
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              margin: const EdgeInsets.symmetric(horizontal: 32),
-              decoration: BoxDecoration(
-                color: AppTheme.textPrimary.withOpacity(0.7),
-                borderRadius: BorderRadius.circular(12),
+            child: Center(
+              child: ElevatedButton.icon(
+                onPressed: _uploadQRCode,
+                icon: const Icon(Icons.upload_file, size: 20),
+                label: const Text(
+                  'Upload QR Code',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: Colors.blue,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  elevation: 2,
+                ),
               ),
-              child: Column(
-                children: [
-                  const Icon(
-                    Icons.qr_code_scanner,
-                    color: AppTheme.surfaceColor,
-                    size: 48,
-                  ),
-                  const SizedBox(height: 12),
-                  const Text(
-                    'Position QR code within the frame',
-                    style: TextStyle(
-                      color: AppTheme.surfaceColor,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Scan a QR code to transfer money to another account',
-                    style: TextStyle(
-                      color: AppTheme.surfaceColor.withOpacity(0.7),
-                      fontSize: 14,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
+            ),
+          ),
+          // Flashlight button at bottom center
+          Positioned(
+            bottom: 30,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  shape: BoxShape.circle,
+                ),
+                child: IconButton(
+                  icon: const Icon(Icons.flashlight_on, size: 28),
+                  color: Colors.white,
+                  onPressed: () {
+                    controller.toggleTorch();
+                  },
+                ),
               ),
             ),
           ),
@@ -205,6 +292,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
 // Custom overlay shape for QR scanner
 class QrScannerOverlayShape extends ShapeBorder {
   final Color borderColor;
+  final Color frameColor;
   final double borderWidth;
   final Color overlayColor;
   final double borderRadius;
@@ -212,12 +300,13 @@ class QrScannerOverlayShape extends ShapeBorder {
   final double cutOutSize;
 
   const QrScannerOverlayShape({
-    this.borderColor = AppTheme.accentOrange,
+    this.borderColor = Colors.blue,
+    this.frameColor = Colors.white,
     this.borderWidth = 3.0,
-    this.overlayColor = const Color.fromRGBO(0, 0, 0, 80),
-    this.borderRadius = 0,
+    this.overlayColor = const Color.fromRGBO(33, 150, 243, 200), // Blue overlay
+    this.borderRadius = 8,
     this.borderLength = 40,
-    this.cutOutSize = 250,
+    this.cutOutSize = 280,
   });
 
   @override
@@ -284,47 +373,86 @@ class QrScannerOverlayShape extends ShapeBorder {
 
     canvas.drawPath(backgroundWithCutOut, backgroundPaint);
 
-    // Draw border
-    final borderPaint = Paint()
+    // Draw white frame
+    final framePaint = Paint()
+      ..color = frameColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0;
+
+    final frameRect = RRect.fromRectAndRadius(
+      Rect.fromLTRB(cutOutLeft, cutOutTop, cutOutRight, cutOutBottom),
+      Radius.circular(borderRadius),
+    );
+    canvas.drawRRect(frameRect, framePaint);
+
+    // Draw blue corner brackets
+    final cornerPaint = Paint()
       ..color = borderColor
       ..style = PaintingStyle.stroke
-      ..strokeWidth = borderWidth;
+      ..strokeWidth = borderWidth
+      ..strokeCap = StrokeCap.round;
 
-    final borderPath = Path()
-      // Top left corner
-      ..moveTo(cutOutLeft, cutOutTop + borderLength)
-      ..lineTo(cutOutLeft, cutOutTop + borderRadius)
-      ..quadraticBezierTo(
-          cutOutLeft, cutOutTop, cutOutLeft + borderRadius, cutOutTop)
-      ..lineTo(cutOutLeft + borderLength, cutOutTop)
-      // Top right corner
-      ..moveTo(cutOutRight - borderLength, cutOutTop)
-      ..lineTo(cutOutRight - borderRadius, cutOutTop)
-      ..quadraticBezierTo(
-          cutOutRight, cutOutTop, cutOutRight, cutOutTop + borderRadius)
-      ..lineTo(cutOutRight, cutOutTop + borderLength)
-      // Bottom right corner
-      ..moveTo(cutOutRight, cutOutBottom - borderLength)
-      ..lineTo(cutOutRight, cutOutBottom - borderRadius)
-      ..quadraticBezierTo(
-          cutOutRight, cutOutBottom, cutOutRight - borderRadius, cutOutBottom)
-      ..lineTo(cutOutRight - borderLength, cutOutBottom)
-      // Bottom left corner
-      ..moveTo(cutOutLeft + borderLength, cutOutBottom)
-      ..lineTo(cutOutLeft + borderRadius, cutOutBottom)
-      ..quadraticBezierTo(
-          cutOutLeft, cutOutBottom, cutOutLeft, cutOutBottom - borderRadius)
-      ..lineTo(cutOutLeft, cutOutBottom - borderLength);
-
-    canvas.drawPath(borderPath, borderPaint);
+    final cornerLength = borderLength;
+    
+    // Top left corner
+    canvas.drawLine(
+      Offset(cutOutLeft, cutOutTop + cornerLength),
+      Offset(cutOutLeft, cutOutTop),
+      cornerPaint,
+    );
+    canvas.drawLine(
+      Offset(cutOutLeft, cutOutTop),
+      Offset(cutOutLeft + cornerLength, cutOutTop),
+      cornerPaint,
+    );
+    
+    // Top right corner
+    canvas.drawLine(
+      Offset(cutOutRight - cornerLength, cutOutTop),
+      Offset(cutOutRight, cutOutTop),
+      cornerPaint,
+    );
+    canvas.drawLine(
+      Offset(cutOutRight, cutOutTop),
+      Offset(cutOutRight, cutOutTop + cornerLength),
+      cornerPaint,
+    );
+    
+    // Bottom right corner
+    canvas.drawLine(
+      Offset(cutOutRight, cutOutBottom - cornerLength),
+      Offset(cutOutRight, cutOutBottom),
+      cornerPaint,
+    );
+    canvas.drawLine(
+      Offset(cutOutRight, cutOutBottom),
+      Offset(cutOutRight - cornerLength, cutOutBottom),
+      cornerPaint,
+    );
+    
+    // Bottom left corner
+    canvas.drawLine(
+      Offset(cutOutLeft + cornerLength, cutOutBottom),
+      Offset(cutOutLeft, cutOutBottom),
+      cornerPaint,
+    );
+    canvas.drawLine(
+      Offset(cutOutLeft, cutOutBottom),
+      Offset(cutOutLeft, cutOutBottom - cornerLength),
+      cornerPaint,
+    );
   }
 
   @override
   ShapeBorder scale(double t) {
     return QrScannerOverlayShape(
       borderColor: borderColor,
+      frameColor: frameColor,
       borderWidth: borderWidth,
       overlayColor: overlayColor,
+      borderRadius: borderRadius,
+      borderLength: borderLength,
+      cutOutSize: cutOutSize,
     );
   }
 }

@@ -55,10 +55,20 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   Widget build(BuildContext context) {
     final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
     return Scaffold(
-      backgroundColor: AppTheme.lightBackground,
-      resizeToAvoidBottomInset: true,
-      body: SafeArea(
-        child: SingleChildScrollView(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              AppTheme.accentOrange,
+              AppTheme.accentOrange.withOpacity(0.9),
+              AppTheme.accentOrange.withOpacity(0.8),
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: SingleChildScrollView(
           controller: _scrollController,
           physics: const ClampingScrollPhysics(
             parent: AlwaysScrollableScrollPhysics(),
@@ -78,7 +88,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 child: IconButton(
                   icon: Icon(
                     Icons.arrow_back_ios_new,
-                    color: AppTheme.textOnLight,
+                    color: AppTheme.surfaceColor,
                     size: 24,
                   ),
                   onPressed: () {
@@ -93,53 +103,38 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   width: 120,
                   height: 120,
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        AppTheme.accentOrange,
-                        AppTheme.accentOrange.withOpacity(0.9),
-                      ],
-                    ),
+                    color: AppTheme.surfaceColor.withOpacity(0.2),
                     shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppTheme.accentOrange.withOpacity(0.3),
-                        blurRadius: 20,
-                        spreadRadius: 5,
-                      ),
-                    ],
+                    border: Border.all(
+                      color: AppTheme.surfaceColor.withOpacity(0.5),
+                      width: 2,
+                    ),
                   ),
-                  child: Container(
-                    margin: EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: AppTheme.surfaceColor,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.lock_reset,
-                      size: 60,
-                      color: AppTheme.accentOrange,
-                    ),
+                  child: Icon(
+                    Icons.lock_reset,
+                    size: 60,
+                    color: AppTheme.surfaceColor,
                   ),
                 ),
               ),
               SizedBox(height: AppTheme.spacingXL),
               Text(
                 'Reset Password',
-                style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.textOnLight,
-                      fontSize: 32,
-                    ),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.surfaceColor,
+                  fontSize: 32,
+                  letterSpacing: 0.5,
+                ),
                 textAlign: TextAlign.center,
               ),
               SizedBox(height: AppTheme.spacingM),
               Text(
                 'Enter your phone number to receive a password reset code',
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: AppTheme.textSecondaryOnLight,
-                    ),
+                style: TextStyle(
+                  color: AppTheme.surfaceColor.withOpacity(0.9),
+                  fontSize: 16,
+                ),
                 textAlign: TextAlign.center,
               ),
               SizedBox(height: AppTheme.spacingXL),
@@ -150,8 +145,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 keyboardType: TextInputType.phone,
                 textInputAction: TextInputAction.done,
                 readOnly: false,
+                style: TextStyle(
+                  fontSize: 16,
+                  color: AppTheme.accentOrange,
+                  fontWeight: FontWeight.w600,
+                ),
                 onTap: () {
-                  // Ensure keyboard shows by requesting focus
                   FocusScope.of(context).requestFocus(_phoneFocusNode);
                   _scrollToField(_phoneFieldKey);
                 },
@@ -161,40 +160,106 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 decoration: InputDecoration(
                   labelText: 'Phone Number',
                   hintText: '+855 12 345 678',
+                  hintStyle: TextStyle(
+                    color: AppTheme.accentOrange.withOpacity(0.6),
+                    fontSize: 16,
+                  ),
+                  labelStyle: TextStyle(
+                    color: AppTheme.accentOrange,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
                   prefixIcon: Icon(
                     Icons.phone_outlined,
-                    color: _isPhoneFocused
-                        ? AppTheme.accentOrange
-                        : AppTheme.textSecondaryOnLight,
+                    color: AppTheme.accentOrange,
+                    size: 22,
                   ),
-                  errorStyle: const TextStyle(color: Colors.red),
+                  filled: true,
+                  fillColor: AppTheme.surfaceColor,
+                  errorStyle: TextStyle(
+                    color: AppTheme.errorRed,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.radiusL),
+                    borderSide: BorderSide(
+                      color: AppTheme.surfaceColor.withOpacity(0.5),
+                      width: 2,
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.radiusL),
+                    borderSide: BorderSide(
+                      color: AppTheme.surfaceColor.withOpacity(0.5),
+                      width: 2,
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.radiusL),
+                    borderSide: BorderSide(
+                      color: AppTheme.surfaceColor,
+                      width: 3,
+                    ),
+                  ),
+                  errorBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.radiusL),
+                    borderSide: BorderSide(
+                      color: AppTheme.errorRed,
+                      width: 2,
+                    ),
+                  ),
+                  focusedErrorBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.radiusL),
+                    borderSide: BorderSide(
+                      color: AppTheme.errorRed,
+                      width: 3,
+                    ),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 18,
+                  ),
                 ),
               ),
-              SizedBox(height: AppTheme.spacingL),
-              ElevatedButton(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Password reset feature coming soon'),
-                      behavior: SnackBarBehavior.floating,
+              SizedBox(height: AppTheme.spacingXL),
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: ElevatedButton(
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: const Text('Password reset feature coming soon'),
+                        backgroundColor: AppTheme.infoBlue,
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppTheme.radiusL),
+                        ),
+                        margin: EdgeInsets.all(AppTheme.spacingM),
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.surfaceColor,
+                    foregroundColor: AppTheme.accentOrange,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.radiusL),
                     ),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.accentOrange,
-                  padding: EdgeInsets.symmetric(vertical: 16),
-                ),
-                child: Text(
-                  'Send Reset Code',
-                  style: TextStyle(
-                    color: AppTheme.surfaceColor,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
+                    elevation: 4,
+                  ),
+                  child: Text(
+                    'Send Reset Code',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ),
             ],
           ),
+        ),
         ),
       ),
     );

@@ -1,16 +1,22 @@
 import 'package:flutter/foundation.dart';
 import '../models/transaction.dart';
-import '../services/storage_service.dart';
+import '../api/api_service_factory.dart';
+import '../api/services/api_service.dart';
 
+/// Transaction Provider
+/// 
+/// Manages transaction data using the API service abstraction.
 class TransactionProvider with ChangeNotifier {
-  final StorageService _storageService = StorageService();
+  final ApiService _apiService = ApiServiceFactory.getService();
   List<Transaction> _transactions = [];
   bool _isLoading = false;
+  String? _errorMessage;
   String _searchQuery = '';
   TransactionType? _filterType;
 
   List<Transaction> get transactions => _transactions;
   bool get isLoading => _isLoading;
+  String? get errorMessage => _errorMessage;
   String get searchQuery => _searchQuery;
   TransactionType? get filterType => _filterType;
 
@@ -38,29 +44,63 @@ class TransactionProvider with ChangeNotifier {
     return filtered;
   }
 
-  Future<void> loadTransactions() async {
+  Future<void> loadTransactions({
+    String? accountNumber,
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
     _isLoading = true;
+    _errorMessage = null;
     notifyListeners();
 
     try {
-      final transactionsJson = await _storageService.getTransactions();
-      _transactions = transactionsJson
-          .map((json) => Transaction.fromJson(json))
-          .toList();
+      final response = await _apiService.getTransactions(
+        accountNumber: accountNumber,
+        startDate: startDate,
+        endDate: endDate,
+      );
+
+      if (response.success && response.data != null) {
+        _transactions = response.data!;
+        _errorMessage = null;
+      } else {
+        _errorMessage = response.message ?? 'Failed to load transactions';
+        _transactions = [];
+      }
     } catch (e) {
-      debugPrint('Error loading transactions: $e');
+      _errorMessage = 'Error loading transactions: $e';
+      debugPrint(_errorMessage);
+      _transactions = [];
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
-  Future<void> addTransaction(Transaction transaction) async {
-    _transactions.add(transaction);
-    await _storageService.saveTransactions(
-      _transactions.map((t) => t.toJson()).toList(),
-    );
+  Future<bool> addTransaction(Transaction transaction) async {
+    _isLoading = true;
+    _errorMessage = null;
     notifyListeners();
+
+    try {
+      final response = await _apiService.createTransaction(transaction);
+
+      if (response.success && response.data != null) {
+        _transactions.add(response.data!);
+        _errorMessage = null;
+        return true;
+      } else {
+        _errorMessage = response.message ?? 'Failed to create transaction';
+        return false;
+      }
+    } catch (e) {
+      _errorMessage = 'Error creating transaction: $e';
+      debugPrint(_errorMessage);
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 
   void setSearchQuery(String query) {
@@ -76,6 +116,11 @@ class TransactionProvider with ChangeNotifier {
   void clearFilters() {
     _searchQuery = '';
     _filterType = null;
+    notifyListeners();
+  }
+
+  void clearError() {
+    _errorMessage = null;
     notifyListeners();
   }
 

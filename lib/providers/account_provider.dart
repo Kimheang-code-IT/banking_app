@@ -1,14 +1,20 @@
 import 'package:flutter/foundation.dart';
 import '../models/account.dart';
-import '../services/storage_service.dart';
+import '../api/api_service_factory.dart';
+import '../api/services/api_service.dart';
 
+/// Account Provider
+/// 
+/// Manages account data using the API service abstraction.
 class AccountProvider with ChangeNotifier {
-  final StorageService _storageService = StorageService();
+  final ApiService _apiService = ApiServiceFactory.getService();
   List<Account> _accounts = [];
   bool _isLoading = false;
+  String? _errorMessage;
 
   List<Account> get accounts => _accounts;
   bool get isLoading => _isLoading;
+  String? get errorMessage => _errorMessage;
 
   Account? get primaryAccount {
     if (_accounts.isEmpty) return null;
@@ -24,38 +30,62 @@ class AccountProvider with ChangeNotifier {
 
   Future<void> loadAccounts() async {
     _isLoading = true;
+    _errorMessage = null;
     notifyListeners();
 
     try {
-      final accountsJson = await _storageService.getAccounts();
-      _accounts = accountsJson.map((json) => Account.fromJson(json)).toList();
+      final response = await _apiService.getAccounts();
+      if (response.success && response.data != null) {
+        _accounts = response.data!;
+        _errorMessage = null;
+      } else {
+        _errorMessage = response.message ?? 'Failed to load accounts';
+        _accounts = [];
+      }
     } catch (e) {
-      debugPrint('Error loading accounts: $e');
+      _errorMessage = 'Error loading accounts: $e';
+      debugPrint(_errorMessage);
+      _accounts = [];
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
-  Future<void> updateAccountBalance(String accountNumber, double newBalance) async {
-    final accountIndex = _accounts.indexWhere(
-      (account) => account.accountNumber == accountNumber,
-    );
+  Future<void> updateAccountBalance(
+    String accountNumber,
+    double newBalance,
+  ) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
 
-    if (accountIndex != -1) {
-      final account = _accounts[accountIndex];
-      final updatedAccount = Account(
-        accountNumber: account.accountNumber,
-        balance: newBalance,
-        type: account.type,
-        currency: account.currency,
-        accountName: account.accountName,
+    try {
+      final response = await _apiService.updateAccountBalance(
+        accountNumber,
+        newBalance,
       );
 
-      _accounts[accountIndex] = updatedAccount;
-      await _storageService.saveAccounts(
-        _accounts.map((a) => a.toJson()).toList(),
-      );
+      if (response.success && response.data != null) {
+        // Update local list
+        final accountIndex = _accounts.indexWhere(
+          (account) => account.accountNumber == accountNumber,
+        );
+        if (accountIndex != -1) {
+          _accounts[accountIndex] = response.data!;
+        } else {
+          // If not in list, reload all accounts
+          await loadAccounts();
+        }
+        _errorMessage = null;
+      } else {
+        _errorMessage = response.message ?? 'Failed to update account balance';
+      }
+    } catch (e) {
+      _errorMessage = 'Error updating account balance: $e';
+      debugPrint(_errorMessage);
+    } finally {
+      _isLoading = false;
       notifyListeners();
     }
   }
@@ -68,6 +98,11 @@ class AccountProvider with ChangeNotifier {
     } catch (e) {
       return null;
     }
+  }
+
+  void clearError() {
+    _errorMessage = null;
+    notifyListeners();
   }
 }
 

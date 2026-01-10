@@ -9,6 +9,7 @@ import 'providers/card_provider.dart';
 import 'providers/bill_provider.dart';
 import 'providers/currency_provider.dart';
 import 'providers/language_provider.dart';
+import 'providers/settings_provider.dart';
 import 'theme/app_theme.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/main_screen.dart';
@@ -34,6 +35,7 @@ class BankingApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => CardProvider()),
         ChangeNotifierProvider(create: (_) => BillProvider()),
         ChangeNotifierProvider(create: (_) => CurrencyProvider()),
+        ChangeNotifierProvider(create: (_) => SettingsProvider()),
       ],
       child: Consumer<LanguageProvider>(
         builder: (context, languageProvider, _) {
@@ -72,32 +74,25 @@ class AuthWrapper extends StatefulWidget {
 }
 
 class _AuthWrapperState extends State<AuthWrapper> {
-  bool _isInitializing = true;
+  bool _isInitializing = false;
   bool _showLanguagePicker = false;
-  bool _showWelcome = false;
+  // Start with welcome screen showing immediately
+  bool _showWelcome = true;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _initializeApp();
-    });
-  }
-
-  Future<void> _initializeApp() async {
-    if (!mounted) return;
-
-    // ALWAYS show Welcome screen first when opening app
+    // Welcome screen will show immediately, no initialization delay needed
     // Welcome screen will handle navigation to Language Picker after animation
-    // Language Picker will then navigate to Login Screen
-    setState(() {
-      _showWelcome = true;
-      _isInitializing = false;
-    });
   }
 
   @override
   Widget build(BuildContext context) {
+    // Show welcome screen first - it will handle navigation to language picker
+    if (_showWelcome) {
+      return const WelcomeScreen();
+    }
+
     if (_isInitializing) {
       return Scaffold(
         body: Container(
@@ -122,10 +117,6 @@ class _AuthWrapperState extends State<AuthWrapper> {
 
     if (_showLanguagePicker) {
       return const LanguagePickerScreen();
-    }
-
-    if (_showWelcome) {
-      return const WelcomeScreen();
     }
 
     // After language picker, always show Login Screen

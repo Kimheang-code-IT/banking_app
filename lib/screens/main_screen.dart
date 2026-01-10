@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import 'dashboard/dashboard_screen.dart';
 import 'messages/messages_screen.dart';
-import 'note/note_screen.dart';
+import 'ai/ai_screen.dart';
 import 'settings/settings_screen.dart';
 
 class MainScreen extends StatefulWidget {
@@ -26,7 +26,7 @@ class _MainScreenState extends State<MainScreen> {
   final List<Widget> _screens = [
     const DashboardScreen(),
     const MessagesScreen(),
-    const NoteScreen(),
+    const AiScreen(),
     const SettingsScreen(),
   ];
 

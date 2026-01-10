@@ -3,27 +3,49 @@ import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../../providers/account_provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../models/account.dart';
 import '../../theme/app_theme.dart';
 import 'qr_scanner_screen.dart';
 
-class QRDisplayScreen extends StatelessWidget {
+class QRDisplayScreen extends StatefulWidget {
   const QRDisplayScreen({super.key});
+
+  @override
+  State<QRDisplayScreen> createState() => _QRDisplayScreenState();
+}
+
+class _QRDisplayScreenState extends State<QRDisplayScreen> {
+  Account? _selectedAccount;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final accountProvider = Provider.of<AccountProvider>(context, listen: false);
+      setState(() {
+        _selectedAccount = accountProvider.primaryAccount;
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final accountProvider = Provider.of<AccountProvider>(context);
     final authProvider = Provider.of<AuthProvider>(context);
 
-    final primaryAccount = accountProvider.primaryAccount;
+    final accounts = accountProvider.accounts;
     final currentUser = authProvider.currentUser;
+    
+    // Use selected account or fallback to primary account
+    final displayAccount = _selectedAccount ?? accountProvider.primaryAccount;
 
-    // Generate QR code data (format: accountNumber:accountName)
-    final qrData = primaryAccount != null && currentUser != null
-        ? '${primaryAccount.accountNumber}:${currentUser.name}'
-        : '1234567890:John Doe'; // Fallback data
-
-    final accountNumber = primaryAccount?.accountNumber ?? '1234567890';
-    final accountName = currentUser?.name ?? 'John Doe';
+    // Get currency from selected account
+    final accountCurrency = displayAccount?.currency.toUpperCase() ?? 'USD';
+    
+    // Generate QR code data (format: accountNumber:accountName:currency)
+    final qrData = displayAccount != null && currentUser != null
+        ? '${displayAccount.accountNumber}:${currentUser.name}:$accountCurrency'
+        : '1234567890:John Doe:$accountCurrency'; // Fallback data
 
     return Scaffold(
       appBar: AppBar(
@@ -68,12 +90,108 @@ class QRDisplayScreen extends StatelessWidget {
           padding: const EdgeInsets.all(24),
           child: Column(
             children: [
+              // Account Selector (always show if accounts exist)
+              if (accounts.isNotEmpty)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: AppTheme.surfaceColor,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: AppTheme.textSecondaryOnLight.withOpacity(0.2),
+                      width: 1,
+                    ),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<Account>(
+                      value: _selectedAccount ?? accountProvider.primaryAccount,
+                      isExpanded: true,
+                      icon: Icon(
+                        Icons.keyboard_arrow_down,
+                        color: AppTheme.accentOrange,
+                      ),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.textOnLight,
+                      ),
+                      items: accounts.map((account) {
+                        final currency = account.currency.toUpperCase();
+                        final accountLabel = account.accountName ?? 
+                            '${account.type.toUpperCase()} Account';
+                        return DropdownMenuItem<Account>(
+                          value: account,
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: currency == 'USD'
+                                      ? Colors.green.withOpacity(0.1)
+                                      : Colors.blue.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    currency == 'USD' ? '\$' : '៛',
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      color: currency == 'USD'
+                                          ? Colors.green
+                                          : Colors.blue,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      '$accountLabel $currency',
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                        color: AppTheme.textOnLight,
+                                      ),
+                                    ),
+                                    Text(
+                                      account.accountNumber,
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: AppTheme.textSecondaryOnLight,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (Account? newAccount) {
+                        if (newAccount != null) {
+                          setState(() {
+                            _selectedAccount = newAccount;
+                          });
+                        }
+                      },
+                    ),
+                  ),
+                ),
+              if (accounts.isNotEmpty) const SizedBox(height: 20),
+              
               // QR Code Card
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(32),
                 decoration: BoxDecoration(
-                  color: AppTheme.lightBackground,
+                  
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
                     color: AppTheme.textSecondaryOnLight.withOpacity(0.2),
@@ -89,48 +207,7 @@ class QRDisplayScreen extends StatelessWidget {
                 ),
                 child: Column(
                   children: [
-                    // Bank Logo/Icon
-                    Container(
-                      width: 60,
-                      height: 60,
-                      decoration: BoxDecoration(
-                        color: AppTheme.accentOrange.withOpacity(0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.account_balance,
-                        color: AppTheme.accentOrange,
-                        size: 32,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Account Name
-                    Text(
-                      accountName,
-                      style: const TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w700,
-                        color: AppTheme.textOnLight,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 8),
-
-                    // Account Number
-                    Text(
-                      accountNumber,
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w500,
-                        color: AppTheme.textSecondaryOnLight,
-                        letterSpacing: 1.2,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 32),
-
-                    // QR Code
+                    // QR Code with embedded currency icon
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
@@ -141,12 +218,19 @@ class QRDisplayScreen extends StatelessWidget {
                           width: 1,
                         ),
                       ),
-                      child: QrImageView(
-                        data: qrData,
-                        version: QrVersions.auto,
-                        size: 250,
-                        backgroundColor: AppTheme.surfaceColor,
-                        errorCorrectionLevel: QrErrorCorrectLevel.M,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          QrImageView(
+                            data: qrData,
+                            version: QrVersions.auto,
+                            size: 250,
+                            
+                            errorCorrectionLevel: QrErrorCorrectLevel.M,
+                          ),
+                          // Currency icon overlay in center
+                          _buildCurrencyIcon(),
+                        ],
                       ),
                     ),
                     const SizedBox(height: 24),
@@ -231,6 +315,31 @@ class QRDisplayScreen extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCurrencyIcon() {
+    final displayAccount = _selectedAccount ?? 
+        Provider.of<AccountProvider>(context, listen: false).primaryAccount;
+    final currency = displayAccount?.currency.toUpperCase() ?? 'USD';
+    
+    return Container(
+      width: 50,
+      height: 50,
+      decoration: BoxDecoration(
+        color: Colors.black,
+        shape: BoxShape.circle,
+      ),
+      child: Center(
+        child: Text(
+          currency == 'USD' ? '\$' : '៛',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
           ),
         ),
       ),

@@ -11,15 +11,47 @@ class IdCardScannerScreen extends StatefulWidget {
   State<IdCardScannerScreen> createState() => _IdCardScannerScreenState();
 }
 
-class _IdCardScannerScreenState extends State<IdCardScannerScreen> {
+class _IdCardScannerScreenState extends State<IdCardScannerScreen>
+    with TickerProviderStateMixin {
   final MobileScannerController controller = MobileScannerController();
   final StorageService _storageService = StorageService();
   bool _isProcessing = false;
+  bool _isTorchOn = false;
+  late AnimationController _loadingAnimationController;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadingAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..repeat();
+  }
 
   @override
   void dispose() {
+    _loadingAnimationController.dispose();
     controller.dispose();
     super.dispose();
+  }
+
+  Future<void> _toggleTorch() async {
+    try {
+      await controller.toggleTorch();
+      setState(() {
+        _isTorchOn = !_isTorchOn;
+      });
+    } catch (e) {
+      // Torch not available on this device
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Flashlight not available'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _handleIdCardScan() async {
@@ -104,20 +136,10 @@ class _IdCardScannerScreenState extends State<IdCardScannerScreen> {
           'Scan ID Card',
           style: TextStyle(
             color: AppTheme.surfaceColor,
-            fontSize: 26,
+            fontSize: 20,
             fontWeight: FontWeight.w700,
           ),
         ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: Icon(
-              Icons.credit_card,
-              color: AppTheme.surfaceColor,
-              size: 28,
-            ),
-          ),
-        ],
       ),
       body: Stack(
         children: [
@@ -134,165 +156,152 @@ class _IdCardScannerScreenState extends State<IdCardScannerScreen> {
             decoration: ShapeDecoration(
               shape: IdCardOverlayShape(
                 borderColor: AppTheme.accentOrange,
-                borderRadius: 12,
-                borderLength: 30,
-                borderWidth: 8,
-                cutOutWidth: 300,
-                cutOutHeight: 200,
+                borderRadius: 8,
+                borderLength: 20,
+                borderWidth: 5,
+                cutOutWidth: 330,
+                cutOutHeight: 250,
               ),
             ),
           ),
-          // Processing indicator
+          // Processing indicator with enhanced loading UI
           if (_isProcessing)
             Container(
-              color: Colors.black.withOpacity(0.7),
-              child: const Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        AppTheme.accentOrange,
+              color: Colors.black.withOpacity(0.85),
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32,
+                    vertical: 40,
+                  ),
+                  margin: const EdgeInsets.symmetric(horizontal: 32),
+                  decoration: BoxDecoration(
+                    color: AppTheme.surfaceColor.withOpacity(0.95),
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.3),
+                        blurRadius: 20,
+                        offset: const Offset(0, 4),
                       ),
-                    ),
-                    SizedBox(height: 24),
-                    Text(
-                      'Processing ID Card...',
-                      style: TextStyle(
-                        color: AppTheme.surfaceColor,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Animated loading indicator
+                      Container(
+                        width: 80,
+                        height: 80,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: AppTheme.accentOrange.withOpacity(0.3),
+                            width: 3,
+                          ),
+                        ),
+                        child: const Center(
+                          child: CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              AppTheme.accentOrange,
+                            ),
+                            strokeWidth: 4,
+                          ),
+                        ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 24),
+                      const Text(
+                        'Scanning ID Card',
+                        style: TextStyle(
+                          color: AppTheme.textOnLight,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'Please wait while we process\nyour identification card',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: AppTheme.textSecondaryOnLight,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w400,
+                          height: 1.5,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      // Animated progress dots
+                      AnimatedBuilder(
+                        animation: _loadingAnimationController,
+                        builder: (context, child) {
+                          return Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: List.generate(3, (index) {
+                              final delay = index * 0.2;
+                              final animationValue =
+                                  (_loadingAnimationController.value + delay) %
+                                      1.0;
+                              final opacity = 0.3 +
+                                  (0.7 *
+                                      (0.5 - (animationValue - 0.5).abs()) *
+                                      2);
+
+                              return Container(
+                                margin: const EdgeInsets.symmetric(
+                                  horizontal: 4,
+                                ),
+                                width: 8,
+                                height: 8,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: AppTheme.accentOrange.withOpacity(
+                                    opacity.clamp(0.3, 1.0),
+                                  ),
+                                ),
+                              );
+                            }),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
-          // Control buttons
-          if (!_isProcessing)
-            Positioned(
-              top: 16,
-              right: 16,
-              child: Column(
-                children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.5),
-                      shape: BoxShape.circle,
+          // Flashlight toggle button at bottom center
+          Positioned(
+            bottom: 30,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: _isTorchOn
+                      ? AppTheme.accentOrange.withOpacity(0.9)
+                      : Colors.black.withOpacity(0.6),
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
                     ),
-                    child: IconButton(
-                      icon: const Icon(
-                        Icons.flash_on,
-                        color: AppTheme.surfaceColor,
-                      ),
-                      onPressed: () {
-                        controller.toggleTorch();
-                      },
-                    ),
+                  ],
+                ),
+                child: IconButton(
+                  icon: Icon(
+                    _isTorchOn ? Icons.flashlight_on : Icons.flashlight_off,
+                    color: AppTheme.surfaceColor,
+                    size: 28,
                   ),
-                  const SizedBox(height: 12),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.5),
-                      shape: BoxShape.circle,
-                    ),
-                    child: IconButton(
-                      icon: const Icon(
-                        Icons.cameraswitch,
-                        color: AppTheme.surfaceColor,
-                      ),
-                      onPressed: () => controller.switchCamera(),
-                    ),
-                  ),
-                ],
+                  onPressed: _toggleTorch,
+                  padding: const EdgeInsets.all(12),
+                  constraints: const BoxConstraints(),
+                ),
               ),
             ),
-          // Instructions and Skip Button
-          if (!_isProcessing)
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: Column(
-                children: [
-                  // Instructions
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    margin: const EdgeInsets.symmetric(horizontal: 32),
-                    decoration: BoxDecoration(
-                      color: AppTheme.textPrimary.withOpacity(0.7),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Column(
-                      children: [
-                        const Icon(
-                          Icons.credit_card,
-                          color: AppTheme.surfaceColor,
-                          size: 48,
-                        ),
-                        const SizedBox(height: 12),
-                        const Text(
-                          'Position your ID card within the frame',
-                          style: TextStyle(
-                            color: AppTheme.surfaceColor,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Ensure the card is flat and well-lit',
-                          style: TextStyle(
-                            color: AppTheme.surfaceColor.withOpacity(0.7),
-                            fontSize: 14,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  // Skip/Enter Manually Button
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 24, vertical: 16),
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton(
-                        onPressed: _handleSkipScan,
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: AppTheme.surfaceColor,
-                          side: const BorderSide(
-                            color: AppTheme.surfaceColor,
-                            width: 2,
-                          ),
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.circular(AppTheme.radiusM),
-                          ),
-                        ),
-                        child: const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.edit_outlined, size: 20),
-                            SizedBox(width: 8),
-                            Text(
-                              'Enter Manually',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+          ),
         ],
       ),
     );
@@ -313,7 +322,7 @@ class IdCardOverlayShape extends ShapeBorder {
     this.borderColor = AppTheme.accentOrange,
     this.borderWidth = 3.0,
     this.overlayColor = const Color.fromRGBO(0, 0, 0, 80),
-    this.borderRadius = 0,
+    this.borderRadius = 12,
     this.borderLength = 40,
     this.cutOutWidth = 300,
     this.cutOutHeight = 200,

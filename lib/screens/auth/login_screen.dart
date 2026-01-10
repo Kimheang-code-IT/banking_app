@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../widgets/custom_button.dart';
 import '../../theme/app_theme.dart';
 import '../../screens/main_screen.dart';
 import 'id_card_scanner_screen.dart';
@@ -22,24 +21,16 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailFieldKey = GlobalKey();
   final _passwordFieldKey = GlobalKey();
   bool _obscurePassword = true;
-  bool _isEmailFocused = false;
-  bool _isPasswordFocused = false;
 
   @override
   void initState() {
     super.initState();
     _emailFocusNode.addListener(() {
-      setState(() {
-        _isEmailFocused = _emailFocusNode.hasFocus;
-      });
       if (_emailFocusNode.hasFocus) {
         _scrollToField(_emailFieldKey);
       }
     });
     _passwordFocusNode.addListener(() {
-      setState(() {
-        _isPasswordFocused = _passwordFocusNode.hasFocus;
-      });
       if (_passwordFocusNode.hasFocus) {
         _scrollToField(_passwordFieldKey);
       }
@@ -109,7 +100,7 @@ class _LoginScreenState extends State<LoginScreen> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppTheme.radiusM),
             ),
-            margin: EdgeInsets.all(AppTheme.spacingM),
+            margin: EdgeInsets.all(AppTheme.spacingS),
           ),
         );
 
@@ -137,264 +128,373 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
     return Scaffold(
-      backgroundColor: AppTheme.lightBackground,
-      resizeToAvoidBottomInset: true,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          controller: _scrollController,
-          physics: const ClampingScrollPhysics(
-            parent: AlwaysScrollableScrollPhysics(),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              AppTheme.accentOrange,
+              AppTheme.accentOrange.withOpacity(0.9),
+              AppTheme.accentOrange.withOpacity(0.8),
+            ],
           ),
-          padding: EdgeInsets.only(
-            left: AppTheme.spacingL,
-            right: AppTheme.spacingL,
-            top: AppTheme.spacingL,
-            bottom: AppTheme.spacingL + keyboardHeight,
-          ),
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              minHeight: MediaQuery.of(context).size.height -
-                  MediaQuery.of(context).padding.top -
-                  MediaQuery.of(context).padding.bottom -
-                  (AppTheme.spacingL * 2) -
-                  keyboardHeight,
+        ),
+        child: SafeArea(
+          child: SingleChildScrollView(
+            controller: _scrollController,
+            physics: const ClampingScrollPhysics(
+              parent: AlwaysScrollableScrollPhysics(),
             ),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  // Logo/Icon
-                  Center(
-                    child: Container(
-                      width: 120,
-                      height: 120,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            AppTheme.accentOrange,
-                            AppTheme.accentOrange.withOpacity(0.9),
-                          ],
-                        ),
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppTheme.accentOrange.withOpacity(0.3),
-                            blurRadius: 20,
-                            spreadRadius: 5,
-                          ),
-                        ],
-                      ),
+            padding: EdgeInsets.only(
+              left: AppTheme.spacingL,
+              right: AppTheme.spacingL,
+              top: AppTheme.spacingL,
+              bottom: AppTheme.spacingL + keyboardHeight,
+            ),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minHeight: MediaQuery.of(context).size.height -
+                    MediaQuery.of(context).padding.top -
+                    MediaQuery.of(context).padding.bottom -
+                    (AppTheme.spacingL * 2) -
+                    keyboardHeight,
+              ),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // Logo/Icon
+                    Center(
                       child: Container(
-                        margin: EdgeInsets.all(4),
+                        width: 120,
+                        height: 120,
                         decoration: BoxDecoration(
-                          color: AppTheme.surfaceColor,
+                          color: AppTheme.surfaceColor.withOpacity(0.2),
                           shape: BoxShape.circle,
+                          border: Border.all(
+                            color: AppTheme.surfaceColor.withOpacity(0.5),
+                            width: 2,
+                          ),
                         ),
                         child: Icon(
                           Icons.account_balance,
                           size: 60,
-                          color: AppTheme.accentOrange,
+                          color: AppTheme.surfaceColor,
                         ),
                       ),
                     ),
-                  ),
-                  SizedBox(height: AppTheme.spacingXL),
-                  Text(
-                    'Welcome back',
-                    style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.textOnLight,
-                          fontSize: 32,
-                        ),
-                    textAlign: TextAlign.center,
-                  ),
-                  SizedBox(height: AppTheme.spacingXL),
-                  // Email Field
-                  TextFormField(
-                    key: _emailFieldKey,
-                    controller: _emailController,
-                    focusNode: _emailFocusNode,
-                    keyboardType: TextInputType.emailAddress,
-                    textInputAction: TextInputAction.next,
-                    autofocus: false,
-                    enabled: true,
-                    readOnly: false,
-                    onTap: () {
-                      // Ensure keyboard shows by requesting focus
-                      FocusScope.of(context).requestFocus(_emailFocusNode);
-                      _scrollToField(_emailFieldKey);
-                    },
-                    onTapOutside: (event) {
-                      // Allow unfocus when tapping outside
-                      _emailFocusNode.unfocus();
-                    },
-                    decoration: InputDecoration(
-                      labelText: 'Email',
-                      hintText: 'Enter your email address',
-                      floatingLabelBehavior: FloatingLabelBehavior.auto,
-                      hintStyle: TextStyle(
-                        color: AppTheme.textSecondaryOnLight.withOpacity(0.7),
-                        fontSize: 16,
+                    SizedBox(height: AppTheme.spacingM),
+                    Text(
+                      'Welcome to, GenZ Bank',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.surfaceColor,
+                        fontSize: 18,
+                        letterSpacing: 0.5,
                       ),
-                      labelStyle: TextStyle(
-                        color: _isEmailFocused
-                            ? AppTheme.accentOrange
-                            : AppTheme.textSecondaryOnLight,
-                        fontSize: 16,
-                      ),
-                      prefixIcon: Icon(
-                        Icons.email_outlined,
-                        color: _isEmailFocused
-                            ? AppTheme.accentOrange
-                            : AppTheme.textSecondaryOnLight,
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 16,
-                      ),
-                      errorStyle: const TextStyle(color: Colors.red),
+                      textAlign: TextAlign.center,
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your email';
-                      }
-                      // Simple email validation
-                      if (!value.contains('@') || !value.contains('.')) {
-                        return 'Please enter a valid email address';
-                      }
-                      return null;
-                    },
-                  ),
-                  SizedBox(height: AppTheme.spacingM),
-                  // Password Field
-                  TextFormField(
-                    key: _passwordFieldKey,
-                    controller: _passwordController,
-                    focusNode: _passwordFocusNode,
-                    obscureText: _obscurePassword,
-                    textInputAction: TextInputAction.done,
-                    onFieldSubmitted: (_) => _handleLogin(),
-                    enabled: true,
-                    readOnly: false,
-                    onTap: () {
-                      // Ensure keyboard shows by requesting focus
-                      FocusScope.of(context).requestFocus(_passwordFocusNode);
-                      _scrollToField(_passwordFieldKey);
-                    },
-                    onTapOutside: (event) {
-                      // Allow unfocus when tapping outside
-                      _passwordFocusNode.unfocus();
-                    },
-                    decoration: InputDecoration(
-                      labelText: 'Password',
-                      hintText: 'Enter your password',
-                      floatingLabelBehavior: FloatingLabelBehavior.auto,
-                      hintStyle: TextStyle(
-                        color: AppTheme.textSecondaryOnLight.withOpacity(0.7),
+                    SizedBox(height: AppTheme.spacingXXL),
+                    // Email Field
+                    TextFormField(
+                      key: _emailFieldKey,
+                      controller: _emailController,
+                      focusNode: _emailFocusNode,
+                      keyboardType: TextInputType.emailAddress,
+                      textInputAction: TextInputAction.next,
+                      autofocus: false,
+                      enabled: true,
+                      readOnly: false,
+                      style: TextStyle(
                         fontSize: 16,
+                        color: AppTheme.textOnLight,
+                        fontWeight: FontWeight.w500,
                       ),
-                      labelStyle: TextStyle(
-                        color: _isPasswordFocused
-                            ? AppTheme.accentOrange
-                            : AppTheme.textSecondaryOnLight,
-                        fontSize: 16,
-                      ),
-                      prefixIcon: Icon(
-                        Icons.lock_outlined,
-                        color: _isPasswordFocused
-                            ? AppTheme.accentOrange
-                            : AppTheme.textSecondaryOnLight,
-                      ),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _obscurePassword
-                              ? Icons.visibility_outlined
-                              : Icons.visibility_off_outlined,
-                          color: AppTheme.textSecondaryOnLight,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            _obscurePassword = !_obscurePassword;
-                          });
-                        },
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 16,
-                      ),
-                      errorStyle: const TextStyle(color: Colors.red),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your password';
-                      }
-                      return null;
-                    },
-                  ),
-                  SizedBox(height: AppTheme.spacingS),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const ForgotPasswordScreen(),
-                          ),
-                        );
+                      onTap: () {
+                        FocusScope.of(context).requestFocus(_emailFocusNode);
+                        _scrollToField(_emailFieldKey);
                       },
-                      child: Text(
-                        'Forgot password?',
-                        style: TextStyle(
+                      onTapOutside: (event) {
+                        _emailFocusNode.unfocus();
+                      },
+                      decoration: InputDecoration(
+                        labelText: 'Phone Number',
+                        hintText: 'Enter your Phone Number',
+                        floatingLabelBehavior: FloatingLabelBehavior.never,
+                        hintStyle: TextStyle(
+                          color: AppTheme.textSecondaryOnLight.withOpacity(0.6),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w400,
+                        ),
+                        labelStyle: TextStyle(
                           color: AppTheme.accentOrange,
+                          fontSize: 14,
                           fontWeight: FontWeight.w600,
                         ),
+                        prefixIcon: Icon(
+                          Icons.email_outlined,
+                          color: AppTheme.accentOrange,
+                          size: 22,
+                        ),
+                        filled: true,
+                        fillColor: AppTheme.surfaceColor,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 18,
+                        ),
+                        errorStyle: TextStyle(
+                          color: AppTheme.errorRed,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(AppTheme.radiusXS),
+                          borderSide: BorderSide(
+                            color: AppTheme.surfaceColor.withOpacity(0.3),
+                            width: 2,
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(AppTheme.radiusXS),
+                          borderSide: BorderSide(
+                            color: AppTheme.surfaceColor.withOpacity(0.3),
+                            width: 2,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(AppTheme.radiusXS),
+                          borderSide: BorderSide(
+                            color: AppTheme.accentOrange,
+                            width: 2.5,
+                          ),
+                        ),
+                        errorBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(AppTheme.radiusXS),
+                          borderSide: BorderSide(
+                            color: AppTheme.errorRed,
+                            width: 2,
+                          ),
+                        ),
+                        focusedErrorBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(AppTheme.radiusXS),
+                          borderSide: BorderSide(
+                            color: AppTheme.errorRed,
+                            width: 2.5,
+                          ),
+                        ),
                       ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter your email';
+                        }
+                        // Simple email validation
+                        if (!value.contains('@') || !value.contains('.')) {
+                          return 'Please enter a valid email address';
+                        }
+                        return null;
+                      },
                     ),
-                  ),
-                  SizedBox(height: AppTheme.spacingS),
-                  SizedBox(
-                    width: double.infinity,
-                    child: CustomButton(
-                      text: 'Log In',
-                      onPressed: _handleLogin,
-                      isLoading: false,
-                    ),
-                  ),
-                  SizedBox(height: AppTheme.spacingL),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        "Don't have an account? ",
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: AppTheme.textSecondaryOnLight,
-                            ),
+                    SizedBox(height: AppTheme.spacingL),
+                    // Password Field
+                    TextFormField(
+                      key: _passwordFieldKey,
+                      controller: _passwordController,
+                      focusNode: _passwordFocusNode,
+                      obscureText: _obscurePassword,
+                      textInputAction: TextInputAction.done,
+                      onFieldSubmitted: (_) => _handleLogin(),
+                      enabled: true,
+                      readOnly: false,
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: AppTheme.textOnLight,
+                        fontWeight: FontWeight.w500,
                       ),
-                      TextButton(
+                      onTap: () {
+                        FocusScope.of(context).requestFocus(_passwordFocusNode);
+                        _scrollToField(_passwordFieldKey);
+                      },
+                      onTapOutside: (event) {
+                        _passwordFocusNode.unfocus();
+                      },
+                      decoration: InputDecoration(
+                        labelText: 'Password',
+                        hintText: 'Enter your password',
+                        floatingLabelBehavior: FloatingLabelBehavior.never,
+                        hintStyle: TextStyle(
+                          color: AppTheme.textSecondaryOnLight.withOpacity(0.6),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w400,
+                        ),
+                        labelStyle: TextStyle(
+                          color: AppTheme.accentOrange,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        prefixIcon: Icon(
+                          Icons.lock_outlined,
+                          color: AppTheme.accentOrange,
+                          size: 22,
+                        ),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscurePassword
+                                ? Icons.visibility_outlined
+                                : Icons.visibility_off_outlined,
+                            color: AppTheme.accentOrange,
+                            size: 22,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _obscurePassword = !_obscurePassword;
+                            });
+                          },
+                        ),
+                        filled: true,
+                        fillColor: AppTheme.surfaceColor,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 18,
+                        ),
+                        errorStyle: TextStyle(
+                          color: AppTheme.errorRed,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(AppTheme.radiusXS),
+                          borderSide: BorderSide(
+                            color: AppTheme.surfaceColor.withOpacity(0.3),
+                            width: 2,
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(AppTheme.radiusXS),
+                          borderSide: BorderSide(
+                            color: AppTheme.surfaceColor.withOpacity(0.3),
+                            width: 2,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(AppTheme.radiusXS),
+                          borderSide: BorderSide(
+                            color: AppTheme.accentOrange,
+                            width: 2.5,
+                          ),
+                        ),
+                        errorBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(AppTheme.radiusXS),
+                          borderSide: BorderSide(
+                            color: AppTheme.errorRed,
+                            width: 2,
+                          ),
+                        ),
+                        focusedErrorBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(AppTheme.radiusXS),
+                          borderSide: BorderSide(
+                            color: AppTheme.errorRed,
+                            width: 2.5,
+                          ),
+                        ),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter your password';
+                        }
+                        return null;
+                      },
+                    ),
+
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
                         onPressed: () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const IdCardScannerScreen(),
+                              builder: (context) =>
+                                  const ForgotPasswordScreen(),
                             ),
                           );
                         },
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 8,
+                          ),
+                        ),
                         child: Text(
-                          'Sign Up',
+                          'Forgot password?',
                           style: TextStyle(
-                            color: AppTheme.accentOrange,
+                            color: AppTheme.surfaceColor,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    SizedBox(
+                      width: 400,
+                      height: 50,
+                      child: ElevatedButton(
+                        onPressed: _handleLogin,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.surfaceColor,
+                          foregroundColor: AppTheme.accentOrange,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.circular(AppTheme.radiusM),
+                          ),
+                          elevation: 4,
+                        ),
+                        child: Text(
+                          'Log In',
+                          style: TextStyle(
+                            fontSize: 16,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
-                    ],
-                  ),
-                ],
+                    ),
+
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          "Don't have an account? ",
+                          style: TextStyle(
+                            color: AppTheme.surfaceColor.withOpacity(0.9),
+                            fontSize: 13,
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const IdCardScannerScreen(),
+                              ),
+                            );
+                          },
+                          child: Text(
+                            'Sign Up',
+                            style: TextStyle(
+                              color: AppTheme.surfaceColor,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

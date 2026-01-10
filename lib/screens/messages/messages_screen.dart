@@ -3,6 +3,7 @@ import '../../theme/app_theme.dart';
 import '../../models/message.dart';
 import '../../services/mock_data_service.dart';
 import 'chat_detail_screen.dart';
+import 'user_profile_view_screen.dart';
 
 class MessagesScreen extends StatefulWidget {
   const MessagesScreen({super.key});
@@ -229,38 +230,56 @@ class _MessagesScreenState extends State<MessagesScreen> {
         child: Row(
           children: [
             // Avatar with online indicator
-            Stack(
-              children: [
-                CircleAvatar(
-                  radius: 28,
-                  backgroundColor: AppTheme.accentOrange.withOpacity(0.2),
-                  child: Text(
-                    conversation.otherUserName?[0].toUpperCase() ?? 'U',
-                    style: TextStyle(
-                      color: AppTheme.accentOrange,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
+            GestureDetector(
+              onTap: () {
+                final otherUserId = conversation.participantIds.firstWhere(
+                    (id) => id != '1'); // Assuming current user is '1'
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => UserProfileViewScreen(
+                      userId: otherUserId,
+                      userName: conversation.otherUserName,
+                      userAvatar: conversation.otherUserAvatar,
+                      isOnline: conversation.isOnline,
+                      conversationId: conversation.id,
                     ),
                   ),
-                ),
-                if (conversation.isOnline)
-                  Positioned(
-                    right: 0,
-                    bottom: 0,
-                    child: Container(
-                      width: 16,
-                      height: 16,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF4CAF50),
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: AppTheme.lightBackground,
-                          width: 2,
-                        ),
+                );
+              },
+              child: Stack(
+                children: [
+                  CircleAvatar(
+                    radius: 28,
+                    backgroundColor: AppTheme.accentOrange.withOpacity(0.2),
+                    child: Text(
+                      conversation.otherUserName?[0].toUpperCase() ?? 'U',
+                      style: TextStyle(
+                        color: AppTheme.accentOrange,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
-              ],
+                  if (conversation.isOnline)
+                    Positioned(
+                      right: 0,
+                      bottom: 0,
+                      child: Container(
+                        width: 16,
+                        height: 16,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF4CAF50),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: AppTheme.lightBackground,
+                            width: 2,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             ),
             const SizedBox(width: 16),
             // Name, message preview, and timestamp

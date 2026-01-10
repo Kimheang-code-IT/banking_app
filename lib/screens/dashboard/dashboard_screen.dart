@@ -1,9 +1,9 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/account_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/currency_provider.dart';
-import '../../services/currency_service.dart';
 import '../../theme/app_theme.dart';
 import '../transfer/transfer_screen.dart';
 import '../cards/cards_screen.dart';
@@ -16,6 +16,7 @@ import '../withdraw/withdraw_screen.dart';
 import '../payment/payment_card_mobile_screen.dart';
 import '../report/report_screen.dart';
 import '../exchange_rate/exchange_rate_screen.dart';
+import '../account/account_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -27,10 +28,13 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen>
     with SingleTickerProviderStateMixin {
   final ScrollController _scrollController = ScrollController();
+  final PageController _pageController = PageController();
   double _shrinkPercent = 0.0;
+  int _currentSlideIndex = 0;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
+  Timer? _slideshowTimer;
 
   @override
   void initState() {
@@ -73,7 +77,28 @@ class _DashboardScreenState extends State<DashboardScreen>
         Provider.of<AccountProvider>(context, listen: false).loadAccounts();
         // Start entrance animation
         _animationController.forward();
+        // Start slideshow auto-advance
+        _startSlideshow();
       }
+    });
+  }
+
+  void _startSlideshow() {
+    _slideshowTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+      if (_pageController.hasClients && mounted) {
+        _currentSlideIndex = (_currentSlideIndex + 1) % 3; // 3 slides
+        _pageController.animateToPage(
+          _currentSlideIndex,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeInOut,
+        );
+      }
+    });
+  }
+
+  void _onSlideChanged(int index) {
+    setState(() {
+      _currentSlideIndex = index;
     });
   }
 
@@ -81,7 +106,9 @@ class _DashboardScreenState extends State<DashboardScreen>
   void dispose() {
     _scrollController.removeListener(_handleScroll);
     _scrollController.dispose();
+    _pageController.dispose();
     _animationController.dispose();
+    _slideshowTimer?.cancel();
     super.dispose();
   }
 
@@ -102,9 +129,11 @@ class _DashboardScreenState extends State<DashboardScreen>
       appBar: AppBar(
         backgroundColor: AppTheme.accentOrange,
         elevation: 0,
+        shadowColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        scrolledUnderElevation: 0,
         toolbarHeight: 60,
         leadingWidth: 70,
-        centerTitle: true,
         titleSpacing: 0,
         leading: Padding(
           padding: const EdgeInsets.only(left: 10),
@@ -152,49 +181,60 @@ class _DashboardScreenState extends State<DashboardScreen>
           ),
         ],
       ),
-      backgroundColor: Color.fromARGB(
-          255, 23, 52, 84), // Dashboard background - Blue (#173454)
-      body: SafeArea(
-        bottom: true,
-        child: AnimatedBuilder(
-          animation: _animationController,
-          builder: (context, child) {
-            return FadeTransition(
-              opacity: _fadeAnimation,
-              child: ScaleTransition(
-                scale: _scaleAnimation,
-                child: child,
-              ),
-            );
-          },
-          child: RefreshIndicator(
-            onRefresh: () async {
-              if (!context.mounted) return;
-              await Provider.of<AccountProvider>(context, listen: false)
-                  .loadAccounts();
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              AppTheme.accentOrange,
+              AppTheme.accentOrange.withOpacity(0.95),
+              AppTheme.accentOrange.withOpacity(0.9),
+            ],
+          ),
+        ),
+        child: SafeArea(
+          bottom: true,
+          child: AnimatedBuilder(
+            animation: _animationController,
+            builder: (context, child) {
+              return FadeTransition(
+                opacity: _fadeAnimation,
+                child: ScaleTransition(
+                  scale: _scaleAnimation,
+                  child: child,
+                ),
+              );
             },
-            child: SingleChildScrollView(
-              controller: _scrollController,
-              physics: const AlwaysScrollableScrollPhysics(),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Header Section (Dark Blue)
-                  _buildHeader(context),
+            child: RefreshIndicator(
+              onRefresh: () async {
+                if (!context.mounted) return;
+                await Provider.of<AccountProvider>(context, listen: false)
+                    .loadAccounts();
+              },
+              child: SingleChildScrollView(
+                controller: _scrollController,
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Profile Section at Top with Account Info
+                    _buildHeader(context),
 
-                  // Account Summary Card (White)
-                  _buildAccountSummaryCard(context),
+                    // Slideshow Card
+                    _buildAccountSummaryCard(context),
 
-                  _buildServicesGrid(context),
+                    _buildServicesGrid(context),
 
-                  SizedBox(height: AppTheme.spacingM),
+                    SizedBox(height: AppTheme.spacingM),
 
-                  // Explore Services Section
+                    // Explore Services Section
 
-                  _buildExploreServices(context),
+                    _buildExploreServices(context),
 
-                  SizedBox(height: AppTheme.spacingM),
-                ],
+                    SizedBox(height: AppTheme.spacingM),
+                  ],
+                ),
               ),
             ),
           ),
@@ -212,13 +252,15 @@ class _DashboardScreenState extends State<DashboardScreen>
             : userName.toUpperCase();
 
         return Container(
-          padding: EdgeInsets.symmetric(
-            horizontal: AppTheme.spacingM,
-            vertical: AppTheme.spacingM,
+          padding: EdgeInsets.only(
+            left: AppTheme.spacingM,
+            right: AppTheme.spacingM,
+            top: AppTheme.spacingM,
+            bottom: AppTheme.spacingXS,
           ),
-          color: AppTheme.accentOrange,
           child: Row(
             children: [
+              // Profile Section - Left Side
               CircleAvatar(
                 backgroundColor: AppTheme.surfaceColor.withOpacity(0.2),
                 radius: 28,
@@ -279,6 +321,8 @@ class _DashboardScreenState extends State<DashboardScreen>
                   ],
                 ),
               ),
+              // Account UI - Right Side
+              _buildAccountInfo(context),
             ],
           ),
         );
@@ -286,184 +330,24 @@ class _DashboardScreenState extends State<DashboardScreen>
     );
   }
 
-  Widget _buildAccountSummaryCard(BuildContext context) {
-    return Consumer<AccountProvider>(
-      builder: (context, accountProvider, _) {
-        if (accountProvider.isLoading) {
-          return const Padding(
-            padding: EdgeInsets.all(4),
-            child: Center(child: CircularProgressIndicator()),
-          );
-        }
-
-        final primaryAccount = accountProvider.primaryAccount;
-        if (primaryAccount == null) {
-          return const SizedBox.shrink();
-        }
-
-        return Consumer<CurrencyProvider>(
-          builder: (context, currencyProvider, _) {
-            final usdBalance = primaryAccount.balance;
-            final rielBalance = CurrencyService.convertUsdToRiel(usdBalance);
-
-            return Container(
-              margin: EdgeInsets.all(AppTheme.spacingM),
-              padding: EdgeInsets.all(AppTheme.spacingM),
-              decoration: BoxDecoration(
-                color: Color.fromARGB(
-                    255, 18, 42, 68), // Card background - Dark blue (#122A44)
-                borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-                border: Border.all(
-                  color: Color.fromARGB(
-                      255, 66, 129, 177), // Border color (#4281B1)
-                  width: 2,
-                ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Left: Circular account analytics widget
-                  _buildAccountAnalyticsCircle(
-                    context,
-                    khrBalance: rielBalance,
-                    usdBalance: usdBalance,
-                  ),
-                  // Right: Total Balance header and balances
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Top row: Total Balance text and eye icon
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            Text(
-                              'សមតុល្យសរុប',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium
-                                  ?.copyWith(
-                                    color: AppTheme.textPrimary,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                            ),
-                            SizedBox(width: AppTheme.spacingM),
-                            Container(
-                              width: 32,
-                              height: 32,
-                              decoration: BoxDecoration(
-                                color: AppTheme.accentOrange,
-                                shape: BoxShape.circle,
-                              ),
-                              child: IconButton(
-                                icon: Icon(
-                                  currencyProvider.isBalanceVisible
-                                      ? Icons.visibility
-                                      : Icons.visibility_off,
-                                  color: AppTheme.surfaceColor,
-                                  size: 18,
-                                ),
-                                padding: EdgeInsets.zero,
-                                constraints: const BoxConstraints(),
-                                onPressed: () {
-                                  currencyProvider.toggleBalanceVisibility();
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: AppTheme.spacingM),
-                        // KHR balance with symbol
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: Text(
-                            currencyProvider.isBalanceVisible
-                                ? CurrencyService.formatRiel(rielBalance)
-                                : '••••• ៛',
-                            style: Theme.of(context)
-                                .textTheme
-                                .headlineMedium
-                                ?.copyWith(
-                                  color: AppTheme.textPrimary,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 20,
-                                  letterSpacing: -0.5,
-                                ),
-                          ),
-                        ),
-                        SizedBox(height: AppTheme.spacingS),
-                        // USD balance with symbol
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: Text(
-                            currencyProvider.isBalanceVisible
-                                ? CurrencyService.formatUsd(usdBalance)
-                                : '••••• \$',
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleLarge
-                                ?.copyWith(
-                                  color: AppTheme.textPrimary,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 20,
-                                ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+  Widget _buildAccountInfo(BuildContext context) {
+    return Consumer<CurrencyProvider>(
+      builder: (context, currencyProvider, _) {
+        return GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const AccountScreen(),
               ),
             );
           },
-        );
-      },
-    );
-  }
-
-  Widget _buildAccountAnalyticsCircle(
-    BuildContext context, {
-    required double khrBalance,
-    required double usdBalance,
-  }) {
-    // Convert USD to KHR for total calculation
-    final usdInKhr = CurrencyService.convertUsdToRiel(usdBalance);
-    final totalBalance = khrBalance + usdInKhr;
-
-    // Calculate percentages
-    final khrPercentage =
-        totalBalance > 0 ? (khrBalance / totalBalance).clamp(0.0, 1.0) : 0.0;
-    final usdPercentage =
-        totalBalance > 0 ? (usdInKhr / totalBalance).clamp(0.0, 1.0) : 0.0;
-
-    return SizedBox(
-      width: 120,
-      height: 120,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          // Outer circle with border and progress indicator
-          Container(
-            width: 120,
-            height: 120,
-            child: CustomPaint(
-              painter: _DualCurrencyProgressPainter(
-                khrProgress: khrPercentage,
-                usdProgress: usdPercentage,
-                khrColor: AppTheme.surfaceColor,
-                usdColor: AppTheme.surfaceColor.withOpacity(0.5),
-                strokeWidth: 10,
-              ),
-            ),
-          ),
-          // Inner circle background
-          Container(
-            width: 100,
-            height: 100,
+          child: Container(
+            width: 70,
+            height: 70,
+            padding: EdgeInsets.all(6),
             decoration: BoxDecoration(
-              color: AppTheme.surfaceColor.withOpacity(0.1),
+              color: AppTheme.cardGray,
               shape: BoxShape.circle,
               border: Border.all(
                 color:
@@ -471,35 +355,174 @@ class _DashboardScreenState extends State<DashboardScreen>
                 width: 2,
               ),
             ),
-          ),
-          // Wallet icon and text
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding: EdgeInsets.all(AppTheme.spacingS),
-                decoration: BoxDecoration(
-                  color: AppTheme.surfaceColor.withOpacity(0.2),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
                   Icons.account_balance_wallet,
                   color: AppTheme.surfaceColor,
-                  size: 32,
+                  size: 28,
                 ),
-              ),
-              SizedBox(height: AppTheme.spacingXS),
-              Text(
-                'គណនី',
-                style: TextStyle(
-                  color: AppTheme.surfaceColor,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
+                SizedBox(height: 2),
+                Text(
+                  'Account',
+                  style: TextStyle(
+                    color: AppTheme.surfaceColor,
+                    fontSize: 9,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
-            ],
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildAccountSummaryCard(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final cardHeight = screenWidth * 0.5; // Responsive height
+
+    return Container(
+      margin: EdgeInsets.symmetric(
+        vertical: AppTheme.spacingM,
+      ),
+      height: cardHeight,
+      child: Stack(
+        children: [
+          // Slideshow
+          PageView.builder(
+            controller: _pageController,
+            onPageChanged: _onSlideChanged,
+            itemCount: 3,
+            itemBuilder: (context, index) {
+              return _buildSlideshowItem(context, index, cardHeight);
+            },
+          ),
+          // Page indicators at bottom
+          Positioned(
+            bottom: AppTheme.spacingM,
+            left: 0,
+            right: 0,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(3, (index) {
+                return Container(
+                  width: _currentSlideIndex == index ? 24 : 8,
+                  height: 8,
+                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                  decoration: BoxDecoration(
+                    color: _currentSlideIndex == index
+                        ? AppTheme.surfaceColor
+                        : AppTheme.surfaceColor.withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusXS),
+                  ),
+                );
+              }),
+            ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSlideshowItem(BuildContext context, int index, double height) {
+    // Beautiful gradient backgrounds for each slide
+    final gradients = [
+      [
+        Color.fromARGB(255, 18, 42, 68), // Dark blue (#122A44)
+        Color.fromARGB(255, 31, 64, 100), // Medium blue
+        Color.fromARGB(255, 23, 52, 84), // Accent blue
+      ],
+      [
+        Color.fromARGB(255, 23, 52, 84), // Accent blue (#173454)
+        Color.fromARGB(255, 35, 70, 110), // Lighter blue
+        Color.fromARGB(255, 18, 42, 68), // Dark blue
+      ],
+      [
+        Color.fromARGB(255, 31, 64, 100), // Medium blue
+        Color.fromARGB(255, 18, 42, 68), // Dark blue
+        Color.fromARGB(255, 28, 56, 88), // Medium dark blue
+      ],
+    ];
+
+    final icons = [
+      Icons.account_balance_wallet,
+      Icons.credit_card,
+      Icons.savings,
+    ];
+
+    final titles = [
+      'គណនី',
+      'កាត',
+      'រក្សាទុក',
+    ];
+
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: AppTheme.spacingM),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(AppTheme.radiusL),
+        border: Border.all(
+          color: Color.fromARGB(255, 66, 129, 177), // Border color (#4281B1)
+          width: 2,
+        ),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppTheme.radiusL),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            // Gradient background
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: gradients[index],
+                ),
+              ),
+            ),
+            // Optional: You can add network images here if needed
+            // Image.network(
+            //   imageUrls[index],
+            //   fit: BoxFit.cover,
+            //   errorBuilder: (context, error, stackTrace) => SizedBox(),
+            // ),
+            // Icon and title in center (optional decorative element)
+            Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(AppTheme.spacingL),
+                    decoration: BoxDecoration(
+                      color: AppTheme.surfaceColor.withOpacity(0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      icons[index],
+                      color: AppTheme.surfaceColor.withOpacity(0.6),
+                      size: MediaQuery.of(context).size.width * 0.12,
+                    ),
+                  ),
+                  SizedBox(height: AppTheme.spacingM),
+                  Text(
+                    titles[index],
+                    style: TextStyle(
+                      color: AppTheme.surfaceColor.withOpacity(0.7),
+                      fontSize: MediaQuery.of(context).size.width * 0.05,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -561,7 +584,7 @@ class _DashboardScreenState extends State<DashboardScreen>
               ),
             ],
           ),
-          SizedBox(height: AppTheme.spacingL),
+          SizedBox(height: AppTheme.spacingM),
           // Row 2: ABA Scan, Transfers, Payment
           Row(
             children: [
@@ -654,7 +677,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                 height: 56,
                 decoration: BoxDecoration(
                   color: AppTheme.accentOrange,
-                  borderRadius: BorderRadius.circular(AppTheme.radiusM),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusL),
                 ),
                 child: Icon(
                   icon,
@@ -682,173 +705,104 @@ class _DashboardScreenState extends State<DashboardScreen>
   }
 
   Widget _buildExploreServices(BuildContext context) {
-    final services = [
-      {
-        'icon': Icons.book,
-        'label': 'Exchange rate',
-        'color': AppTheme.accentOrange
-      },
-      {
-        'icon': Icons.local_offer,
-        'label': 'Report',
-        'color': AppTheme.accentOrange
-      },
-    ];
-
-    return SizedBox(
-      height: 80,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        itemCount: services.length,
-        itemBuilder: (context, index) {
-          final service = services[index];
-          return Container(
-            width: 180,
-            margin: EdgeInsets.only(right: AppTheme.spacingM),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: () {
-                  if (service['label'] == 'Exchange rate') {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const ExchangeRateScreen(),
-                      ),
-                    );
-                  } else if (service['label'] == 'Report') {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const ReportScreen(),
-                      ),
-                    );
-                  }
-                },
-                borderRadius: BorderRadius.circular(AppTheme.radiusM),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: AppTheme.cardGray,
-                    borderRadius: BorderRadius.circular(AppTheme.radiusM),
-                    border: Border.all(
-                      color: Color.fromARGB(
-                          255, 66, 129, 177), // Border color (#4281B1)
-                      width: 2,
-                    ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        children: [
+          // Exchange rate card
+          Expanded(
+            child: _buildExploreServiceCard(
+              context,
+              icon: Icons.book,
+              label: 'Exchange',
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ExchangeRateScreen(),
                   ),
-                  padding: EdgeInsets.symmetric(
-                    horizontal: AppTheme.spacingM,
-                    vertical: AppTheme.spacingS,
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: EdgeInsets.all(AppTheme.spacingS),
-                        decoration: BoxDecoration(
-                          color: AppTheme.accentOrange,
-                          borderRadius: BorderRadius.circular(AppTheme.radiusM),
-                        ),
-                        child: Icon(
-                          service['icon'] as IconData,
-                          color: AppTheme.surfaceColor,
-                          size: 22,
-                        ),
-                      ),
-                      SizedBox(width: AppTheme.spacingM),
-                      Expanded(
-                        child: Text(
-                          service['label'] as String,
-                          style:
-                              Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                    color: AppTheme.textPrimary,
-                                  ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+                );
+              },
             ),
-          );
-        },
+          ),
+          SizedBox(width: AppTheme.spacingM),
+          // Report card
+          Expanded(
+            child: _buildExploreServiceCard(
+              context,
+              icon: Icons.local_offer,
+              label: 'Report',
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ReportScreen(),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
-}
 
-// Custom painter for dual currency circular progress indicator
-class _DualCurrencyProgressPainter extends CustomPainter {
-  final double khrProgress;
-  final double usdProgress;
-  final Color khrColor;
-  final Color usdColor;
-  final double strokeWidth;
-
-  _DualCurrencyProgressPainter({
-    required this.khrProgress,
-    required this.usdProgress,
-    required this.khrColor,
-    required this.usdColor,
-    required this.strokeWidth,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = (size.width - strokeWidth) / 2;
-
-    // Start from top (-90 degrees)
-    final startAngle = -3.14159 / 2; // -90 degrees
-
-    // Draw KHR segment first (white)
-    if (khrProgress > 0) {
-      final khrPaint = Paint()
-        ..color = khrColor
-        ..strokeWidth = strokeWidth
-        ..style = PaintingStyle.stroke
-        ..strokeCap = StrokeCap.round;
-
-      final khrSweepAngle = 2 * 3.14159 * khrProgress;
-
-      canvas.drawArc(
-        Rect.fromCircle(center: center, radius: radius),
-        startAngle,
-        khrSweepAngle,
-        false,
-        khrPaint,
-      );
-    }
-
-    // Draw USD segment after KHR (orange)
-    if (usdProgress > 0) {
-      final usdPaint = Paint()
-        ..color = usdColor
-        ..strokeWidth = strokeWidth
-        ..style = PaintingStyle.stroke
-        ..strokeCap = StrokeCap.round;
-
-      final usdStartAngle = startAngle + (2 * 3.14159 * khrProgress);
-      final usdSweepAngle = 2 * 3.14159 * usdProgress;
-
-      canvas.drawArc(
-        Rect.fromCircle(center: center, radius: radius),
-        usdStartAngle,
-        usdSweepAngle,
-        false,
-        usdPaint,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(_DualCurrencyProgressPainter oldDelegate) {
-    return oldDelegate.khrProgress != khrProgress ||
-        oldDelegate.usdProgress != usdProgress ||
-        oldDelegate.khrColor != khrColor ||
-        oldDelegate.usdColor != usdColor;
+  Widget _buildExploreServiceCard(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppTheme.radiusL),
+        child: Container(
+          height: 80,
+          decoration: BoxDecoration(
+            color: AppTheme.cardGray,
+            borderRadius: BorderRadius.circular(AppTheme.radiusL),
+            border: Border.all(
+              color:
+                  Color.fromARGB(255, 66, 129, 177), // Border color (#4281B1)
+              width: 2,
+            ),
+          ),
+          padding: EdgeInsets.symmetric(
+            horizontal: AppTheme.spacingM,
+            vertical: AppTheme.spacingS,
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: EdgeInsets.all(AppTheme.spacingS),
+                decoration: BoxDecoration(
+                  color: AppTheme.accentOrange,
+                  borderRadius: BorderRadius.circular(AppTheme.radiusL),
+                ),
+                child: Icon(
+                  icon,
+                  color: AppTheme.surfaceColor,
+                  size: 22,
+                ),
+              ),
+              SizedBox(width: AppTheme.spacingM),
+              Expanded(
+                child: Text(
+                  label,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.textPrimary,
+                      ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
